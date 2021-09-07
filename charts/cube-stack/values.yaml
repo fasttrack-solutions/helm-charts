@@ -4,8 +4,6 @@ global:
     enabled: true
   cubestore:
     enabled: true
-  redis:
-    enabled: true
 
 # Subchart Vars
 cubejs:
