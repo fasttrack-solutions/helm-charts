@@ -1,6 +1,26 @@
 apiVersion: v1
 entries:
   cube-stack:
+  - apiVersion: v1
+    appVersion: 0.28.26
+    created: "2021-09-07T17:54:17.45407011Z"
+    description: Cube Stack is an Umbrella Chart that contains everything needed to
+      run Cube in production.
+    digest: 4631ab8ce3fcbc3a3c24ce1ac598590ba1da5585564ff2aaf3acd2a67269de56
+    keywords:
+    - cubejs
+    maintainers:
+    - email: luc.vauvillier@gmail.com
+      name: Luc Vauvillier
+    - email: adnan@cube.dev
+      name: Adnan Rahic
+    name: cube-stack
+    sources:
+    - https://github.com/cube-js/cube.js
+    type: application
+    urls:
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/cube-stack-0.1.1/cube-stack-0.1.1.tgz
+    version: 0.1.1
   - apiVersion: v2
     appVersion: 0.28.26
     created: "2021-09-07T17:30:44.710342428Z"
@@ -35,6 +55,23 @@ entries:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/cube-stack-0.1.0/cube-stack-0.1.0.tgz
     version: 0.1.0
   cubejs:
+  - apiVersion: v1
+    appVersion: 0.28.32
+    created: "2021-09-07T17:54:17.601641803Z"
+    description: A Helm chart for Cubejs
+    digest: 7034ffa7ff343dfb2a24a840e11de6ec6dbb18f9f93b25be2c8dce73a80b7831
+    keywords:
+    - cubejs
+    maintainers:
+    - email: luc.vauvillier@gmail.com
+      name: Luc Vauvillier
+    name: cubejs
+    sources:
+    - https://github.com/cube-js/cube.js
+    type: application
+    urls:
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/cubejs-0.1.1/cubejs-0.1.1.tgz
+    version: 0.1.1
   - apiVersion: v2
     appVersion: 0.28.32
     created: "2021-09-07T17:30:44.871599688Z"
@@ -53,6 +90,24 @@ entries:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/cubejs-0.1.0/cubejs-0.1.0.tgz
     version: 0.1.0
   cubestore:
+  - apiVersion: v1
+    appVersion: 0.28.32
+    created: "2021-09-07T17:54:17.739198965Z"
+    description: A Helm chart for Cubestore
+    digest: 69ecc9051edf2ec184d55461802b0ace01f103b10654b7df6160e0249c8e409f
+    keywords:
+    - cubejs
+    - cubestore
+    maintainers:
+    - email: luc.vauvillier@gmail.com
+      name: Luc Vauvillier
+    name: cubestore
+    sources:
+    - https://github.com/cube-js/cube.js
+    type: application
+    urls:
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/cubestore-0.1.1/cubestore-0.1.1.tgz
+    version: 0.1.1
   - apiVersion: v2
     appVersion: 0.28.32
     created: "2021-09-07T17:30:45.036905573Z"
@@ -71,4 +126,4 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/cubestore-0.1.0/cubestore-0.1.0.tgz
     version: 0.1.0
-generated: "2021-09-07T17:30:45.036911873Z"
+generated: "2021-09-07T17:54:17.739218767Z"
