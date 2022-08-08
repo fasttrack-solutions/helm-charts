@@ -22,9 +22,9 @@ spec:
   scope: Namespaced
   version: null
   versions:
-  - name: v2
+  - name: v1
     served: true
-    storage: true
+    storage: false
     schema:
       openAPIV3Schema:
         description: AuthService is the Schema for the authservices API
@@ -110,9 +110,9 @@ spec:
             - auth_service
             type: object
         type: object
-  - name: v1
+  - name: v2
     served: true
-    storage: false
+    storage: true
     schema:
       openAPIV3Schema:
         description: AuthService is the Schema for the authservices API
