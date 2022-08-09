@@ -27,7 +27,7 @@ entries:
     - https://github.com/datawire/ambassador
     - https://github.com/prometheus/statsd_exporter
     urls:
-    - https://github.com/fasttrack-solutions/helm-charts/releases/download/ambassador-6.9.5-alpha/ambassador-6.9.5-alpha.tgz
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/ambassador-6.9.5/ambassador-6.9.5.tgz
     version: 6.9.5-alpha
   cube-stack:
   - apiVersion: v1
