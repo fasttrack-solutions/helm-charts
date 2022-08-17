@@ -24,6 +24,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
+  storageClassName: gp2-multi  
   resources:
     requests:
       storage: {{ .Values.remoteDir.persistence.size }}
