@@ -158,6 +158,24 @@ entries:
   cubestore:
   - apiVersion: v1
     appVersion: 0.28.32
+    created: "2022-08-17T06:36:45.504553454Z"
+    description: A Helm chart for Cubestore
+    digest: 243f47f00d449afdd6f4f484081bf34eb6a10abfffd2491fa2d54aa33c505b00
+    keywords:
+    - cubejs
+    - cubestore
+    maintainers:
+    - email: luc.vauvillier@gmail.com
+      name: Luc Vauvillier
+    name: cubestore
+    sources:
+    - https://github.com/cube-js/cube.js
+    type: application
+    urls:
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/cubestore-0.1.4/cubestore-0.1.4.tgz
+    version: 0.1.4
+  - apiVersion: v1
+    appVersion: 0.28.32
     created: "2022-08-16T13:54:43.347056795Z"
     description: A Helm chart for Cubestore
     digest: 00a814934d4ea0c58b746c82e9f38596377782e3bb1073c0516a339aa51be20b
@@ -228,4 +246,4 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/cubestore-0.1.0/cubestore-0.1.0.tgz
     version: 0.1.0
-generated: "2022-08-16T13:54:43.347077895Z"
+generated: "2022-08-17T06:36:45.504635655Z"
