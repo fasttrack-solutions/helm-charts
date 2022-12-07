@@ -9,10 +9,6 @@
 - name: CUBEJS_DEV_MODE
   value: {{ .Values.config.devMode | quote }}
 {{- end }}
-{{- if .Values.config.dbQueryTimeout }}
-- name: CUBEJS_DB_QUERY_TIMEOUT
-  value: {{ .Values.config.dbQueryTimeout | quote }}
-{{- end }}
 {{- if .Values.config.logLevel }}
 - name: CUBEJS_LOG_LEVEL
   value: {{ .Values.config.logLevel | quote }}
