@@ -109,7 +109,7 @@ config:
   #   readOnly: true
   #   mountPath: /cube/conf/schema
 
-  dbQueryTimeout:
+  dbQueryTimeout: 30m
 
 redis:
   ## The host URL for a Redis server
