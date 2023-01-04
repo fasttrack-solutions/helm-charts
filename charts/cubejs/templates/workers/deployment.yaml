@@ -35,6 +35,8 @@ spec:
             {{- include "cubejs.common-env" . | nindent 12 }}
             - name: CUBEJS_REFRESH_WORKER
               value: "true"
+            - name: CUBEJS_DB_QUERY_TIMEOUT
+              value: {{ .Values.config.dbQueryTimeout }}
           {{- if .Values.workers.livenessProbe.enabled }}
           livenessProbe:
             initialDelaySeconds: {{ .Values.workers.livenessProbe.initialDelaySeconds }}
