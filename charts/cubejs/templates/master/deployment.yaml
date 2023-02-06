@@ -22,6 +22,10 @@ spec:
         app.kubernetes.io/component: master
         {{- include "cubejs.selectorLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.master.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.master.nodeSelector | nindent 8 }}
+      {{- end }}
       containers:
         - name: cube
           image: "{{ .Values.image.repository }}:v{{ .Values.image.tag | default .Chart.AppVersion }}"

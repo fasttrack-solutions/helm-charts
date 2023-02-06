@@ -23,6 +23,10 @@ spec:
         app.kubernetes.io/component: router
         {{- include "cubestore.selectorLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.router.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.router.nodeSelector | nindent 8 }}
+      {{- end }}
       containers:
         - name: cubestore
           image: "{{ .Values.image.repository }}:v{{ .Values.image.tag | default .Chart.AppVersion }}"
