@@ -24,6 +24,10 @@ spec:
         app.kubernetes.io/component: workers
         {{- include "cubejs.selectorLabels" . | nindent 8 }}
     spec:
+      {{- if .Values.workers.nodeSelector }}
+      nodeSelector:
+        {{- toYaml .Values.workers.nodeSelector | nindent 8 }}
+      {{- end }}
       containers:
         - name: cube
           image: "{{ .Values.image.repository }}:v{{ .Values.image.tag | default .Chart.AppVersion }}"
