@@ -451,6 +451,10 @@ master:
   ##
   resources: {}
 
+  ## The label to be assigned on the node
+  ##
+  nodeSelector:
+
   ## Configure options for liveness probes
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
   ##
@@ -498,6 +502,10 @@ workers:
   ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
   ##
   resources: {}
+
+  ## The label to be assigned on the node
+  ##
+  nodeSelector:
 
   ## Configure options for liveness probes
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes

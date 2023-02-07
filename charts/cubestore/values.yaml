@@ -131,6 +131,10 @@ router:
   ##
   statusPort: 3031
 
+  ## The label to be assigned on the node
+  ##
+  nodeSelector:
+
   persistence:
     ## Enable persistence for local data using Persistent Volume Claims
     ##
