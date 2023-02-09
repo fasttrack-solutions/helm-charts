@@ -3,7 +3,7 @@ name: cubestore
 description: A Helm chart for Cubestore
 type: application
 version: 0.1.7
-appVersion: "0.28.32-non-avx"
+appVersion: "0.28.39-non-avx"
 keywords:
   - cubejs
   - cubestore
