@@ -358,7 +358,7 @@ redis:
   create: true
   image:
     repository: redis
-    tag: 5.0.1
+    tag: 5.0.14
     pullPolicy: IfNotPresent
   # Annotations for Ambassador Pro's redis instance.
   annotations:
