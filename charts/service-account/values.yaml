@@ -1,4 +1,4 @@
-name: my-serviceaccount # override per service
+name: my-service-account # override per service
 namespace: default # override per environment
 irsa:
   enabled: true
