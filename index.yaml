@@ -410,6 +410,16 @@ entries:
     version: 0.1.0
   service-account:
   - apiVersion: v1
+    appVersion: 1.0.0
+    created: "2026-02-03T09:58:51.298838994Z"
+    description: Reusable Helm chart to create ServiceAccounts for Terraform 0.11-managed
+      services on EKS
+    digest: e8eea296f22f75127365eef2a1b9f3cd034638c768a93e34aa89954405b4c8bc
+    name: service-account
+    urls:
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/service-account-0.1.1/service-account-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v1
     created: "2026-02-03T09:49:46.795890878Z"
     description: Reusable Helm chart to create ServiceAccounts for Terraform 0.11-managed
       services on EKS
@@ -428,4 +438,4 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/serviceaccount-0.1.0/serviceaccount-0.1.0.tgz
     version: 0.1.0
-generated: "2026-02-03T09:49:46.795932225Z"
+generated: "2026-02-03T09:58:51.2989072Z"
