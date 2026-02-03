@@ -1,0 +1,6 @@
+name: my-service-account # override per service
+namespace: default # override per environment
+irsa:
+  enabled: false
+  roleArn: ""   # override per environment
+automountServiceAccountToken: false
