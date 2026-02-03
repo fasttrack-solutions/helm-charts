@@ -408,4 +408,14 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/cubestore-0.1.0/cubestore-0.1.0.tgz
     version: 0.1.0
-generated: "2024-05-21T08:38:40.912510707Z"
+  serviceaccount:
+  - apiVersion: v1
+    created: "2026-02-03T07:06:23.325156027Z"
+    description: Reusable Helm chart to create ServiceAccounts for Terraform 0.11-managed
+      services on EKS
+    digest: 3d1fd5789a6b1b026a1f7f09b8c2467df6b3fe23ec7aa874b8460542514427ea
+    name: serviceaccount
+    urls:
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/serviceaccount-0.1.0/serviceaccount-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-02-03T07:06:23.325207903Z"
