@@ -1,0 +1,39 @@
+{{/*
+ft-service.scaledobject — KEDA ScaledObject (replaces HPA + the hand-rolled
+template_file/null_resource kubectl ScaledObjects and the remote scaling module).
+triggers is a values list, so cpu/memory/rabbitmq/kafka all flow through one schema.
+Guarded by scaledObject.enabled.
+*/}}
+{{- define "ft-service.scaledobject" -}}
+{{- $so := (index .Values "scaledObject") | default dict -}}
+{{- if $so.enabled -}}
+{{- $name := include "ft-service.name" . -}}
+{{- $triggers := $so.triggers | default list -}}
+{{- if not $triggers }}{{- fail "scaledObject.enabled=true requires a non-empty scaledObject.triggers list" }}{{- end -}}
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ $name }}
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  scaleTargetRef:
+    name: {{ $name }}
+  minReplicaCount: {{ $so.minReplicaCount | default 1 }}
+  maxReplicaCount: {{ $so.maxReplicaCount | default 10 }}
+  {{- if hasKey $so "idleReplicaCount" }}
+  idleReplicaCount: {{ $so.idleReplicaCount }}
+  {{- end }}
+  {{- with $so.cooldownPeriod }}
+  cooldownPeriod: {{ . }}
+  {{- end }}
+  {{- with $so.pollingInterval }}
+  pollingInterval: {{ . }}
+  {{- end }}
+  triggers:
+    {{- toYaml $triggers | nindent 4 }}
+{{- end }}
+{{- end -}}

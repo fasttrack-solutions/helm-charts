@@ -1,0 +1,162 @@
+{{/*
+ft-service.deployment — the generic Deployment.
+Everything except `deployment.image.repository` has an inline default, so a
+minimal consumer (just image + chart name) renders a valid Deployment.
+*/}}
+{{- define "ft-service.deployment" -}}
+{{- if eq (include "ft-service.enabled" .) "true" -}}
+{{- $name := include "ft-service.name" . -}}
+{{- $d := (index .Values "deployment") | default dict -}}
+{{- $reloader := true }}{{- if hasKey $d "reloader" }}{{- $reloader = $d.reloader }}{{- end }}
+{{- $replicas := 1 }}{{- if hasKey $d "replicaCount" }}{{- $replicas = $d.replicaCount }}{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ $name }}
+  annotations:
+    {{- if $reloader }}
+    reloader.stakater.com/auto: "true"
+    {{- end }}
+    argocd.argoproj.io/sync-wave: {{ $d.syncWave | default "1" | quote }}
+    {{- with $d.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ $replicas }}
+  {{- with $d.strategy }}
+  strategy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app: {{ $name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $name }}
+        {{- with $d.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- $prom := $d.prometheus | default dict }}
+      {{- if or $prom.enabled $d.podAnnotations }}
+      annotations:
+        {{- if $prom.enabled }}
+        prometheus.io/scrape: "true"
+        prometheus.io/path: {{ $prom.path | default "/metrics" | quote }}
+        prometheus.io/port: {{ $prom.port | default 9090 | quote }}
+        {{- end }}
+        {{- with $d.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- end }}
+    spec:
+      {{- $sa := include "ft-service.serviceAccountName" . }}
+      {{- if $sa }}
+      serviceAccountName: {{ $sa }}
+      {{- end }}
+      {{- if hasKey $d "automountServiceAccountToken" }}
+      automountServiceAccountToken: {{ $d.automountServiceAccountToken }}
+      {{- end }}
+      nodeSelector:
+        {{- toYaml ($d.nodeSelector | default (dict "workload" "common")) | nindent 8 }}
+      {{- with $d.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $d.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $d.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $d.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $d.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- $initC := include "ft-service.initContainers" . | trim }}
+      {{- if $initC }}
+      initContainers:
+        {{- $initC | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $name }}
+          {{- $img := $d.image | default dict }}
+          {{- $repo := required "deployment.image.repository is required" $img.repository }}
+          {{- $tag := $img.tag | default "" | toString }}
+          {{- $prefix := $img.tagPrefix | default "" }}
+          image: "{{ $repo }}{{ if $tag }}:{{ $prefix }}{{ $tag }}{{ end }}"
+          {{- with $d.imagePullPolicy }}
+          imagePullPolicy: {{ . }}
+          {{- end }}
+          {{- with $d.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $d.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- $ports := list (dict "name" "http" "containerPort" 3000) }}
+          {{- if hasKey $d "ports" }}{{- $ports = $d.ports }}{{- end }}
+          {{- with $ports }}
+          ports:
+            {{- range . }}
+            - name: {{ .name | default "http" }}
+              containerPort: {{ .containerPort }}
+              protocol: {{ .protocol | default "TCP" }}
+            {{- end }}
+          {{- end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "ft-service.configMapRef" . }}
+            {{- with $d.secretRef }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+            {{- with $d.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with $d.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $d.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $d.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $d.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $d.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- $vm := include "ft-service.volumeMounts" . | trim }}
+          {{- if $vm }}
+          volumeMounts:
+            {{- $vm | nindent 12 }}
+          {{- end }}
+        {{- with $d.extraContainers }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- $vol := include "ft-service.volumes" . | trim }}
+      {{- if $vol }}
+      volumes:
+        {{- $vol | nindent 8 }}
+      {{- end }}
+{{- end }}
+{{- end -}}

@@ -1,61 +1,31 @@
 # Values for the crm-api chart.
 # Converted from oneclickdeployment/terraform_v1. AWS resources (IAM role/policy,
 # S3 buckets) are NOT part of this chart — they remain managed by Terraform.
-# The values those resources fed into Kubernetes are exposed below:
-#   - serviceAccount.roleArn  (was aws_iam_role.crm-api.arn)
-#   - the export bucket name is derived as "<brandName>-<environmentType>-data-studio-exports"
-#     (same expression as aws_s3_bucket.crm-api-exports.bucket)
+#
+# ── Library-compatible keys (deployment, service, serviceAccount, scaledObject,
+#    gatewayApi, dbInit) feed the ft-service skeleton templates.
+# ── crm-api-specific keys (environmentType, brandId, rds, redis, unleash …)
+#    feed only configmap.yaml, which stays in this chart.
 
 # -- Namespace override. Defaults to the release namespace when empty.
 namespace: ""
 
-# Environment type: dev | staging | production. Drives min replicas and several
-# environment-conditional config values.
+# ── crm-api-specific values (used by configmap.yaml) ──────────────────────────
+
+# Environment type: dev | staging | production. Drives config values.
 environmentType: production
 
-# --- Brand identity (var.brand_*) ---
 brandId: ""
 brandName: ""
 brandHostName: ""
 
-image:
-  # was var.image_repository_url
-  repository: ""
-  # was var.module_version
-  tag: latest
-  pullPolicy: IfNotPresent
-
-# crm-api-db-init init container (db-init:latest in terraform).
-dbInit:
-  enabled: true
-  image: 745106446559.dkr.ecr.eu-west-1.amazonaws.com/db-init:latest
-  imagePullPolicy: Always
-  # was local.initDbScript
-  initSql: |
-    CREATE DATABASE IF NOT EXISTS currency CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
-
-# Container resource requests (var.crm_api_request_*).
-resources:
-  requests:
-    cpu: 25m
-    memory: 150Mi
-
-# var.use_ondemand_instances -> node selector workload class.
-useOndemandInstances: false
-
-serviceAccount:
-  create: true
-  name: crm-api
-  # was aws_iam_role.crm-api.arn — set to the IAM role ARN provisioned by Terraform.
-  roleArn: ""
-
-# --- RDS / MySQL (var.rds_*) ---
+# RDS / MySQL (var.rds_*)
 rds:
   host: ""
   masterUsername: ""
   masterPassword: ""
 
-# --- Redis (var.general_redis_*) ---
+# Redis (var.general_redis_*)
 redis:
   host: ""
   port: ""
@@ -63,50 +33,140 @@ redis:
 # CORS: defaults to https://<brandHostName> when empty (was var.api_allowed_origins).
 apiAllowedOrigins: ""
 
-# --- Unleash key resolution (locals.unleash_api_key) ---
+# Unleash key resolution (locals.unleash_api_key)
 unleash:
-  # If set, takes precedence over the environment-specific keys below.
   apiKeyOverride: ""
   productionApiKey: ""
   stagingApiKey: ""
 
-# --- Alert manager implementation (locals.alert_manager_implementation) ---
+# Alert manager implementation (locals.alert_manager_implementation)
 alertManager:
   productionImplementation: incident.io
   stagingImplementation: logger
 
-# --- Rewards backend gRPC key resolution (REWARDS_V3_GRPC_X_API_KEY) ---
+# Rewards backend gRPC key (REWARDS_V3_GRPC_X_API_KEY)
 rewards:
-  # var.crm_api_rewards_backend_grpc_api_key — if set, takes precedence.
   backendGrpcApiKeyOverride: ""
 
 # DEVICE_AUTH_ENABLED: empty -> "false" in production, "true" otherwise
-# (was var.crm_api_device_auth_enabled).
 deviceAuthEnabled: ""
 
-# --- Autoscaling (KEDA ScaledObject) ---
-autoscaling:
-  # var.use_pod_autoscaling — renders the ScaledObject when true.
+# ── ft-service library keys ───────────────────────────────────────────────────
+
+deployment:
+  image:
+    # was var.image_repository_url
+    repository: ""
+    # was var.module_version — injected per-deploy by ArgoCD
+    tag: latest
+    pullPolicy: IfNotPresent
+  resources:
+    requests:
+      # was var.crm_api_request_{cpu,memory}
+      cpu: 25m
+      memory: 150Mi
+  # arm64 spot pool — set to {workload: common_ondemand} via env values when
+  # use_ondemand_instances=true (was var.use_ondemand_instances)
+  nodeSelector:
+    workload: common
+  tolerations:
+    - key: arch
+      operator: Equal
+      value: arm64
+      effect: NoSchedule
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          preference:
+            matchExpressions:
+              - key: kubernetes.io/arch
+                operator: In
+                values:
+                  - arm64
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+      labelSelector:
+        matchLabels:
+          app: crm-api
+  podLabels:
+    spotinst.io/restrict-scale-down: "true"
+  ports:
+    - { name: http,  containerPort: 3000 }
+    - { name: grpc,  containerPort: 1337 }
+    - { name: pprof, containerPort: 6060 }
+  command:
+    - /app/goapp
+  prometheus:
+    enabled: true
+    path: /metrics
+    port: 9090
+  # replicaCount defaults to 1; set to 2 in the production env-layer values file
+  replicaCount: 1
+
+# db-init convenience initContainer — was local.initDbScript + db-init Terraform resource.
+# MySQL credentials supplied at the env layer via ArgoCD values (Vault placeholders).
+dbInit:
+  enabled: true
+  image: 745106446559.dkr.ecr.eu-west-1.amazonaws.com/db-init:latest
+  env:
+    - name: MYSQL_HOST
+      value: ""  # set per-env
+    - name: MYSQL_USER
+      value: ""  # set per-env
+    - name: MYSQL_PASSWORD
+      value: ""  # set per-env
+    - name: MYSQL_PORT
+      value: "3306"
+    - name: INIT_SQL
+      value: "CREATE DATABASE IF NOT EXISTS currency CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
+
+service:
+  ports:
+    - { name: http, port: 80, targetPort: 3000 }
+    - { name: grpc, port: 1337, targetPort: 1337 }
+  annotations:
+    getambassador.io/config: |
+      apiVersion: ambassador/v1
+      kind:  Mapping
+      name:  crm-api-service_mapping
+      prefix: /crm-api/
+      service: crm-api
+      timeout_ms: 300000
+
+serviceAccount:
+  create: true
+  # was aws_iam_role.crm-api.arn — set to the IAM role ARN provisioned by Terraform.
+  roleArn: ""
+
+# KEDA ScaledObject — was var.use_pod_autoscaling + autoscaling locals.
+# minReplicaCount: set to 2 in the production env-layer values file.
+scaledObject:
   enabled: false
   pollingInterval: 5
   cooldownPeriod: 300
   maxReplicaCount: 5
-  cpu:
-    enabled: false
-    type: Utilization
-    value: "80"
-  memory:
-    enabled: false
-    type: Utilization
-    value: "90"
+  triggers:
+    - type: cpu
+      metadata:
+        type: Utilization
+        value: "80"
+    - type: memory
+      metadata:
+        type: Utilization
+        value: "90"
 
-# --- Gateway API HTTPRoute (var.kubernetes_gateway_api_enabled) ---
+# Gateway API HTTPRoute — was var.kubernetes_gateway_api_enabled.
+# Hostnames come from global.envSettings.brandHostName (set by the umbrella).
+# External-DNS target comes from global.gatewayApi.clusterHostName.
+# Double-gated: also requires global.gatewayApi.enabled=true at the cluster layer.
 gatewayApi:
   enabled: false
-  # was var.environment_infra_shared_k8_cluster_name (underscores replaced with hyphens).
-  sharedClusterName: ""
+  prefix: /crm-api/
 
-# --- Prisma migrations Job ---
+# Prisma migrations Job (managed separately — not yet in ft-service library)
 prisma:
   enabled: true
   # was var.prisma_image_repository_url

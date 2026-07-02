@@ -1,0 +1,6 @@
+dependencies:
+- name: ft-service
+  repository: file://../ft-service
+  version: 1.0.0
+digest: sha256:77c31134a9a4f0300b27d0167a1131ca393238c0391acf1558dbd4b8ef134299
+generated: "2026-07-02T21:13:53.237076+02:00"

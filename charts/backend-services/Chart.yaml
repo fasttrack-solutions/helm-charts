@@ -2,6 +2,10 @@ apiVersion: v2
 name: crm-api
 description: Fast Track CRM API service (converted from oneclickdeployment/terraform_v1)
 type: application
-version: 0.1.0
+version: 0.2.0
 # appVersion tracks the default container tag; override with values.image.tag per deploy.
 appVersion: "latest"
+dependencies:
+  - name: ft-service
+    version: "1.x"
+    repository: "file://../ft-service"

@@ -18,10 +18,7 @@
 {{- $alertManager = .Values.alertManager.productionImplementation -}}
 {{- end -}}
 
-{{- $rewardsKey := .Values.rewards.backendGrpcApiKey -}}
-{{- if ne .Values.rewards.backendGrpcApiKeyOverride "" -}}
-{{- $rewardsKey = .Values.rewards.backendGrpcApiKeyOverride -}}
-{{- end -}}
+{{- $rewardsKey := .Values.rewards.backendGrpcApiKeyOverride -}}
 
 {{- $deviceAuth := .Values.deviceAuthEnabled -}}
 {{- if eq .Values.deviceAuthEnabled "" -}}
@@ -53,7 +50,7 @@
 -}}
 
 {{/* Computed entries win over the pass-through .Values.config map. */}}
-{{- $data := merge $computed .Values.config -}}
+{{- $data := merge $computed (.Values.config | default dict) -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
