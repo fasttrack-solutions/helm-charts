@@ -1,0 +1,79 @@
+name: Release Dev Charts
+
+# Dev/pre-release channel: pushing a `chart/**` branch publishes each changed
+# chart at version "<Chart.yaml version>-<short-sha>" (a SemVer pre-release), so
+# it can be pinned in ArgoCD before merging to main. Mirrors helm-release.yml but
+# with a per-commit version and a branch trigger.
+on:
+  push:
+    branches:
+      - 'chart/**'
+
+# Serialize runs across all chart/** branches so concurrent pushes don't race on
+# the gh-pages index.yaml commit. Don't cancel in-progress runs — each push should
+# finish publishing its package.
+concurrency:
+  group: chart-dev-release
+  cancel-in-progress: false
+
+jobs:
+  release-dev:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # chart-releaser creates GitHub Releases + pushes to gh-pages
+    steps:
+      - name: Checkout
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "$GITHUB_ACTOR"
+          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+
+      - name: Install Helm
+        uses: azure/setup-helm@18bc76811624f360dbd7f18c2d4ecb32c7b87bab # v1.1
+        with:
+          version: v3.14.4
+
+      - name: Stamp dev version (Chart.yaml version + commit hash)
+        id: stamp
+        run: |
+          set -euo pipefail
+          SHA="$(git rev-parse --short HEAD)"
+
+          # Which charts changed on this branch vs main? (fall back to all charts)
+          git fetch --quiet origin main || true
+          BASE="$(git merge-base HEAD origin/main 2>/dev/null || true)"
+          if [ -n "$BASE" ]; then
+            CHANGED="$(git diff --name-only "$BASE"...HEAD -- 'charts/**' | awk -F/ '{print $2}' | sort -u)"
+          else
+            CHANGED="$(find charts -mindepth 1 -maxdepth 1 -type d -printf '%f\n')"
+          fi
+
+          if [ -z "$CHANGED" ]; then
+            echo "No changed charts under charts/ — nothing to release."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          for c in $CHANGED; do
+            f="charts/$c/Chart.yaml"
+            [ -f "$f" ] || continue
+            base="$(yq '.version' "$f")"
+            new="${base}-${SHA}"
+            yq -i ".version = \"${new}\"" "$f"
+            echo "stamped $c: ${base} -> ${new}"
+          done
+          echo "release=true" >> "$GITHUB_OUTPUT"
+
+      - name: Run chart-releaser
+        if: steps.stamp.outputs.release == 'true'
+        uses: helm/chart-releaser-action@a3454e46a6f5ac4811069a381e646961dda2e1bf # v1.4.0
+        env:
+          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+        # For a repo whose charts aren't under charts/ (e.g. crm-api's
+        # oneclickdeployment/helm), add:
+        #   with:
+        #     charts_dir: oneclickdeployment/helm
