@@ -1,0 +1,322 @@
+# Values for the crm-api chart.
+# Converted from oneclickdeployment/terraform_v1. AWS resources (IAM role/policy,
+# S3 buckets) are NOT part of this chart — they remain managed by Terraform.
+# The values those resources fed into Kubernetes are exposed below:
+#   - serviceAccount.roleArn  (was aws_iam_role.crm-api.arn)
+#   - the export bucket name is derived as "<brandName>-<environmentType>-data-studio-exports"
+#     (same expression as aws_s3_bucket.crm-api-exports.bucket)
+
+# -- Namespace override. Defaults to the release namespace when empty.
+namespace: ""
+
+# Environment type: dev | staging | production. Drives min replicas and several
+# environment-conditional config values.
+environmentType: production
+
+# --- Brand identity (var.brand_*) ---
+brandId: ""
+brandName: ""
+brandHostName: ""
+
+image:
+  # was var.image_repository_url
+  repository: ""
+  # was var.module_version
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# crm-api-db-init init container (db-init:latest in terraform).
+dbInit:
+  enabled: true
+  image: 745106446559.dkr.ecr.eu-west-1.amazonaws.com/db-init:latest
+  imagePullPolicy: Always
+  # was local.initDbScript
+  initSql: |
+    CREATE DATABASE IF NOT EXISTS currency CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+
+# Container resource requests (var.crm_api_request_*).
+resources:
+  requests:
+    cpu: 25m
+    memory: 150Mi
+
+# var.use_ondemand_instances -> node selector workload class.
+useOndemandInstances: false
+
+serviceAccount:
+  create: true
+  name: crm-api
+  # was aws_iam_role.crm-api.arn — set to the IAM role ARN provisioned by Terraform.
+  roleArn: ""
+
+# --- RDS / MySQL (var.rds_*) ---
+rds:
+  host: ""
+  masterUsername: ""
+  masterPassword: ""
+
+# --- Redis (var.general_redis_*) ---
+redis:
+  host: ""
+  port: ""
+
+# CORS: defaults to https://<brandHostName> when empty (was var.api_allowed_origins).
+apiAllowedOrigins: ""
+
+# --- Unleash key resolution (locals.unleash_api_key) ---
+unleash:
+  # If set, takes precedence over the environment-specific keys below.
+  apiKeyOverride: ""
+  productionApiKey: ""
+  stagingApiKey: ""
+
+# --- Alert manager implementation (locals.alert_manager_implementation) ---
+alertManager:
+  productionImplementation: incident.io
+  stagingImplementation: logger
+
+# --- Rewards backend gRPC key resolution (REWARDS_V3_GRPC_X_API_KEY) ---
+rewards:
+  # var.crm_api_rewards_backend_grpc_api_key — if set, takes precedence.
+  backendGrpcApiKeyOverride: ""
+  # var.rewards_backend_grpc_api_key (fallback default).
+  backendGrpcApiKey: GaWzXNPkRAcDGRGhDhYTrnfba89twt
+
+# DEVICE_AUTH_ENABLED: empty -> "false" in production, "true" otherwise
+# (was var.crm_api_device_auth_enabled).
+deviceAuthEnabled: ""
+
+# --- Autoscaling (KEDA ScaledObject) ---
+autoscaling:
+  # var.use_pod_autoscaling — renders the ScaledObject when true.
+  enabled: false
+  pollingInterval: 5
+  cooldownPeriod: 300
+  maxReplicaCount: 5
+  cpu:
+    enabled: false
+    type: Utilization
+    value: "80"
+  memory:
+    enabled: false
+    type: Utilization
+    value: "90"
+
+# --- Gateway API HTTPRoute (var.kubernetes_gateway_api_enabled) ---
+gatewayApi:
+  enabled: false
+  # was var.environment_infra_shared_k8_cluster_name (underscores replaced with hyphens).
+  sharedClusterName: ""
+
+# --- Prisma migrations Job ---
+prisma:
+  enabled: true
+  # was var.prisma_image_repository_url
+  imageRepository: ""
+  # was var.prisma_module_version
+  imageTag: ""
+  # was var.use_analytics
+  useAnalytics: "false"
+
+# Pass-through environment variables for the crm-api ConfigMap.
+# These mirror the terraform_v1 variable defaults. Computed/composite entries
+# (DATABASE_URL, REDIS_URL, STAGE, CORS_ALLOW_ORIGINS, UNLEASH_API_KEY, etc.)
+# are derived in templates/configmap.yaml and override anything set here.
+config:
+  PORT: "3000"
+
+  DATABASE_ACTIVITY_MANAGER_DBNAME: activitymanager
+  DATABASE_AUTHENTICATION_DBNAME: authentication
+  DATABASE_TEMPLATES_DBNAME: templates
+  DATABASE_CHANGELOG_DBNAME: crm_users_change_log
+  DATABASE_UNSUBSCRIBE_PAGES_DBNAME: unsubscribe_pages
+  DATABASE_EMAILLOG_DBNAME: email_log
+  DATABASE_SMSLOG_DBNAME: sms_log
+
+  BASE_CURRENCY: EUR
+  SMS_DISTRIBUTOR_DEFAULT_STOP_TEXT: ""
+  SMS_ADD_STOP_TEXT: "true"
+  SMS_UNSUBSCRIBE_URL: ""
+  ENABLE_PATHFINDER: "false"
+  PATHFINDER_BASE_URL: ""
+  USE_SINGLE_REDIS_DB: "true"
+  SERVICE_TOKEN: ""
+  JWT_SECRET: BDNHxAxbFBD3zGJOJhNqZI2sYRlM81JgT19sBbu8Lj4pwFS6JxjrWor6mCEm6PM3DehFCq/xAC859onXGJ12vbxpUo0ZVwmUQdjuD8YWzLeu0HMStC6X2AWdVHFF1gB3Usywda29Xw8lf1FWr25BD6w4p42yLGPJOoAynFsqbbiMskrOD1VaLzxorJIdXixuy548tmRjMnrzPO2evxFLr/0JXJdoGasrQq57scuJ3mGm3is6wYtYT+VbcxuindBVFeAyqROIpKPRRas8th01cjnJnoNtty+HeQ0mugJoUjPdfqTriEjoFt85cZPod3j7R71WEsZIOQZh/blA67N4Ew==
+  LOOKER_GROUP_ID: ""
+  LOOKER_SPACES: ""
+  LOOKER_DB_USER: ""
+  LOOKER_EMBED_PERMISSIONS: ""
+  DEADLOCK_ATTEMPTS: "10"
+  USE_ANALYTICS_DB: "true"
+  ANALYTICS_URL: http://analytics-api
+  ANALYTICS_API_KEY: ""
+  SERVICE_PORTAL_URL: http://service-portal
+  SERVICE_PORTAL_KEY: ""
+  PING_PONG_URL: http://ping-pong
+  PING_PONG_KEY: ""
+  PBD_URL: http://rewards-api/api
+  PBD_SERVICE_KEY: ""
+  REWARDS_V3_GRPC_API_GATEWAY_HOST: http://rewards-grpc-api-gateway:8081
+  SINGULARITY_API_X_API_KEY: ""
+  SINGULARITY_API_GRPC_API_GATEWAY_HOST: http://singularity-grpc-api-gateway:8081
+  VECTOR_API_GATEWAY_HOST: http://llm-mcp
+  VECTOR_API_KEY: ""
+  DROPDOWN_API_KEY: ""
+  DROPDOWN_API_ENDPOINT: ""
+  ACADEMY_API_KEY: ""
+  ACADEMY_API_ENDPOINT: https://fasttrack.api.trainn.co
+  LOG_LEVEL: info
+  TOKEN_REFRESH_EXTEND_MINUTES: "240"
+  SENTRY_DSN: ""
+  ENABLE_SENTRY: "true"
+  PLATFORM_VERSION_NAME: ""
+  SENTRY_LOG_LEVELS: error,fatal,panic
+  ENABLE_SENTRY_TRACING: "true"
+  SENTRY_TRACES_SAMPLE_RATE: "0"
+  SENTRY_SAMPLE_RATE: "1"
+  FT_INCIDENT_EMAIL_RECIPIENTS: simon@fasttrack-solutions.com,chris@fasttrack-solutions.com,patrik@fasttrack-solutions.com
+  FT_TWILIO_API_ENDPOINT: https://studio.twilio.com/v1/Flows/FW3e9d39b3eea49a3ce0aae702d4200e22/Executions
+  RETURN_BLOCKED_PLAYERS: "false"
+  SEGMENT_IS_BLOCKED_KEY: user_blocks-blocked
+  SEGMENT_IS_EXCLUDED_KEY: user_blocks-excluded
+  ANALYTICS_TAGS_TABLE_NAME: user_details
+  ANALYTICS_TAGS_COLUMN_NAME: tags
+  GLOBAL_EXCLUSION_SEGMENT: ""
+  INTEGRATION_API_URL: http://crm-integration-producer
+  INTEGRATION_API_KEY: ""
+  DEFAULT_ACTIVITY_CONVERSION_PERIOD: "24"
+  BRAND_CURRENCY_SYMBOL: €
+  USE_ENRICHED_TRIGGER_EVENTS: "true"
+  INGRESS_IP_WHITELIST: ""
+  INGRESS_HASH_SECRETS: ""
+  ENABLE_TOPICS: ""
+  AMQP_URL: ""
+  AWS_REGION: eu-west-1
+  AWS_S3_BUCKET_NAME: ""
+  S3_ACTION_LOG_FILE_NAME: user-%d/
+  S3_ACTION_LOG_FILE_NAME_OLD_RECORDS: user-%d/%d/%d/
+  SINGULARITY_MAX_FEATURES_PER_STORAGE_TABLE: "25"
+  S3_MAX_KEYS: "1000"
+  ACTION_HISTORY_FROM_DATABASE: "true"
+  ACTION_HISTORY_FROM_CLICKHOUSE: "true"
+  MAX_BUFFER_SIZE_IN_MB: "10"
+  TARGET_BLOCKED_PLAYERS_KEYWORD: blocked keyword
+  TARGET_EXCLUDED_PLAYERS_KEYWORD: excluded keyword
+  PLAYER_ORIGIN_CACHE_KEY: player_origin
+  EXTERNAL_USER_ID_KEY: user_details-external_user_id
+  USE_EXTERNAL_USER_ID: "false"
+  PLAYER_ORIGIN_KEY: user_details-origin
+  EXTERNAL_ORIGIN_KEY: user_details-origin
+  RETURN_PHONENUMBER_SEARCH_SEGMENT: "true"
+  AGGREGATE_FIELDS_VIEW_NAME: agg_calculated_fields_view
+  TRANSLATIONS_API_URL: ""
+  CUBEJS_API_KEY: ""
+  CUBEJS_URL: http://cubejs:4000
+  CUBE_JS_ANALYTICS_URL: http://crm-api
+  CLICKHOUSE_PORT: "9000"
+  CLICKHOUSE_SCHEMA: insights
+  CLICKHOUSE_USER: ""
+  CLICKHOUSE_PASSWORD: ""
+  CLICKHOUSE_DB_CONNECTION: tcp://internal-a5058e6d3ac7c4875971c1e29060f4df-2088485673.eu-west-1.elb.amazonaws.com:%s?username=%s&password=%s&database=%s&read_timeout=30&debug=false
+  CLICKHOUSE_DB_NAME: insights
+  INSTALL_COMPUTATIONS: "true"
+  INSTALL_SINGULARITY: "true"
+  PLAYER_FEATURE_SEGMENTATION_ENABLED: "false"
+  USE_SINGULARITY_FEATURE_TABLES: "false"
+  ENABLE_AUTOLOGIN: "false"
+  AUTOLOGIN_ENCRYPTION_KEY: ""
+  AUTOLOGIN_SALT_FIELD: ""
+  AUTOLOGIN_REPLACEMENT_TEXT: "#AUTOLOGIN#"
+  ALLIANCE_API_KEY: ""
+  ALLIANCE_HOST: http://alliance-api
+  DB_CONN_MAX_LIFETIME: "120"
+  DB_MAX_OPEN_CONNS: "4"
+  ENABLE_MAX_DB_CONNECTIONS: "false"
+  ENABLE_SQL_LOGGING: "false"
+  ENABLE_DATA_STUDIO_ALERTS: "true"
+  DATA_STUDIO_SLACK_WEBHOOK_URL: ""
+  SERVICE_PORTAL_CENTRAL_URL: https://service-portal-api.fasttrack-solutions.com
+  ENABLE_OVERDUE_INVOICE_RESTRICTION: "true"
+  EVENT_COLLECTOR_GRPC_HOST: event-collector-api
+  EVENT_COLLECTOR_GRPC_PORT: "3037"
+  EVENT_COLLECTOR_GRPC_XAPI_KEY: ""
+  EVENT_COLLECTOR_MAX_SEGMENT_NUM: "350"
+  EXTERNAL_INCIDENTS_CHANNEL_NAME: ""
+  AI_GRPC_HOST: openai-api
+  AI_GRPC_PORT: "3101"
+  AI_GRPC_X_API_KEY: ""
+  BROADCASTS_GRPC_HOST: broadcasting-api
+  BROADCASTS_GRPC_PORT: "13338"
+  BROADCASTS_GRPC_X_API_KEY: ""
+  AUDIENCE_GRPC_HOST: audience-api
+  AUDIENCE_GRPC_PORT: "13339"
+  AUDIENCE_GRPC_X_API_KEY: ""
+  USE_MOCK_SIMULATION_SERVICE: "false"
+  ONE_TO_ONE_SIMULATION_RESULTS_EXPIRY_MINUTES: ""
+  STATS_FETCH_CONVERSION_DATA: "true"
+  DATASTUDIO_TIMEZONE: UTC
+  ENABLE_EXPORT_PII_FILTER: "true"
+  FTML_API_URL: http://ftml-api
+  FTML_API_KEY: ""
+  FTML_PROJECT_NAME: Data Science
+  FAILED_ACTIONS_GRPC_HOST: failed-actions-api
+  FAILED_ACTIONS_GRPC_PORT: "13337"
+  FAILED_ACTIONS_GRPC_X_API_KEY: ""
+  GRPC_X_API_KEY: ""
+  GRPC_PORT: "1337"
+  INTEGRATION_HUB_GRPC_HOST: integration-hub-api
+  INTEGRATION_HUB_GRPC_PORT: "3333"
+  INTEGRATION_HUB_GRPC_X_API_KEY: ""
+  FRIENDLY_CATEGORY_MAP_JSON: '{"agg_calculated_fields_view":"Calculated Segment Fields","calculated_player_activity":"Time Period Segmentation","brand_revenue_model":"Overall Revenue","user_blocks":"User","user_consents":"User","user_details":"User"}'
+  INSTALL_DATA_TRANSLATIONS: "false"
+  DEFAULT_TO_MD5_PASSWORD_ENABLED: "true"
+  USER_DETAILS_ORIGIN_KEY: user_details-origin
+  INSTALL_DEFAULT_ROLE_ON_STARTUP: "true"
+  GRECO_LOAD_MASTER_DATA_FROM_ENGINE_ROOM: "false"
+  GRECO_LOAD_MASTER_DATA_CRON_SCHEDULE: "@every 1h"
+  GRECO_LOAD_MASTER_DATA_ON_STARTUP: "true"
+  GRECO_ENGINEROOM_SERVICE_URL: ""
+  GRECO_ENGINEROOM_SERVICE_TOKEN: ""
+  GRECO_GAMES_SERVICE_BATCH_SIZE: "1000"
+  REMOVEABLE_SEGMENTFIELD_SUFFIXES: _ARRAY,_SINCE,_DIFF,_DATE_FUNC
+  SEGMENTFIELD_PREFIXES_SKIP_VALIDATION: internal_segmentation,singularity_feature,singularity_state,sfs
+  SENDGRID_API_KEY: ""
+  USER_DETAILS_JOIN_ENGINE_TABLE: user_details_join_engine
+  USER_ID_FIELD: user_id
+  BRAND_ID_FIELD: brand_id
+  INTERCOM_USER_HASH_SECRET: ""
+  INTERCOM_ACCESS_TOKEN: ""
+  INTERCOM_ENABLED: "false"
+  ENDPOINT_CONTEXT_TIMEOUT_IN_SECONDS: "60"
+  INCIDENT_IO_API_URL: ""
+  INCIDENT_IO_API_KEY: ""
+  ENVIRONMENT_SCALER_ACTIVE: "false"
+  MAX_CONSECUTIVE_FIRES: "5"
+  MAX_FIRES_PER_HOUR: "10"
+  RATE_LIMIT_ENABLED: "true"
+  RATE_LIMIT_PENALTY_SECONDS: "5"
+  RATE_LIMIT_CLEANUP_SECONDS: "300"
+  AUTOMATICALLY_GIVE_FT_USERS_READ_ONLY_ACCESS: "true"
+  ASSIGN_DEFAULT_ROLE_TO_FT_USERS: "true"
+  FAST_TRACK_AI_TEMPLATES_ENABLED: "false"
+  WORKOS_CLIENT_ID: ""
+  WORKOS_API_KEY: ""
+  GOOGLE_OAUTH_CLIENT_ID: 706365197587-enedvlgphegpc7sb5c401f4lsmbip4po.apps.googleusercontent.com
+  UNLEASH_ENABLED: "true"
+  UNLEASH_API_URL: https://eu.app.unleash-hosted.com/eujj0028/api
+  UNLEASH_REFRESH_INTERVAL_MINUTES: "60"
+  FEATURE_FLAGS: system-market=false,system-personas=false,system-default-cohort=false,churn-sportsbook=false
+  WORKOS_ALLOW_GOOGLE_SSO: "false"
+  FEATURE_FLAG_DRIFT_CHECK_INTERVAL_MINUTES: "5"
+  ENABLE_REWORKED_CALCULATED_SEGMENT_FIELDS: "false"
+  ACTION_GROUP_SPLIT_MANAGEMENT_ENABLED: "false"
+  RESET_OVERRIDE_COMMUNICATION_STATUS_ON_LIFECYCLE_CLONE: "false"
+  TRACING_COLLECTOR: sentry
+  CURRENCY_FX_RATE_SYNC_ENABLED: "true"
+  CURRENCY_FX_RATE_SYNC_INTERVAL_MINUTES: "60"
+  EXCHANGE_RATE_GRPC_HOST: exchange.fasttrack.dev
+  EXCHANGE_RATE_GRPC_PORT: "443"
+  EXCHANGE_RATE_GRPC_X_API_KEY: ""
+  MAX_AUDIT_QUEUE_SIZE: "50000"
+  ENABLE_SYSTEM_AUDIT_LOG: "false"
+  LLM_AGENT_URL: http://llm-agent
