@@ -85,6 +85,17 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/ambassador-6.9.5-hpa-testing/ambassador-6.9.5-hpa-testing.tgz
     version: 6.9.5-hpa-testing
+  backend-services:
+  - apiVersion: v2
+    appVersion: latest
+    created: "2026-07-02T14:12:15.287026635Z"
+    description: Fast Track CRM API service (converted from oneclickdeployment/terraform_v1)
+    digest: 9d09d99aba11260a199ca12db45d92dc86d08e67cb75aaa1bdae03791df9a830
+    name: backend-services
+    type: application
+    urls:
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/backend-services-0.1.0-b4ec2a8/backend-services-0.1.0-b4ec2a8.tgz
+    version: 0.1.0-b4ec2a8
   crm-api:
   - apiVersion: v2
     appVersion: latest
@@ -494,4 +505,4 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/serviceaccount-0.1.0/serviceaccount-0.1.0.tgz
     version: 0.1.0
-generated: "2026-07-02T14:05:59.407086518Z"
+generated: "2026-07-02T14:12:15.287086968Z"
