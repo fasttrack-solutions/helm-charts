@@ -96,6 +96,16 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/backend-services-0.1.0-b4ec2a8/backend-services-0.1.0-b4ec2a8.tgz
     version: 0.1.0-b4ec2a8
+  - apiVersion: v2
+    appVersion: latest
+    created: "2026-07-02T14:27:06.410647224Z"
+    description: Fast Track CRM API service (converted from oneclickdeployment/terraform_v1)
+    digest: 29afdf09e3d96518dade3079549ccb25c4bd13814028756ecfb705ebc71bc055
+    name: backend-services
+    type: application
+    urls:
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/backend-services-0.1.0-354ff2d/backend-services-0.1.0-354ff2d.tgz
+    version: 0.1.0-354ff2d
   crm-api:
   - apiVersion: v2
     appVersion: latest
@@ -505,4 +515,4 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/serviceaccount-0.1.0/serviceaccount-0.1.0.tgz
     version: 0.1.0
-generated: "2026-07-02T14:12:15.287086968Z"
+generated: "2026-07-02T14:27:06.410747651Z"
