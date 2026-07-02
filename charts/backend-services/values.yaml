@@ -1,0 +1,117 @@
+# Values for the crm-api chart.
+# Converted from oneclickdeployment/terraform_v1. AWS resources (IAM role/policy,
+# S3 buckets) are NOT part of this chart — they remain managed by Terraform.
+# The values those resources fed into Kubernetes are exposed below:
+#   - serviceAccount.roleArn  (was aws_iam_role.crm-api.arn)
+#   - the export bucket name is derived as "<brandName>-<environmentType>-data-studio-exports"
+#     (same expression as aws_s3_bucket.crm-api-exports.bucket)
+
+# -- Namespace override. Defaults to the release namespace when empty.
+namespace: ""
+
+# Environment type: dev | staging | production. Drives min replicas and several
+# environment-conditional config values.
+environmentType: production
+
+# --- Brand identity (var.brand_*) ---
+brandId: ""
+brandName: ""
+brandHostName: ""
+
+image:
+  # was var.image_repository_url
+  repository: ""
+  # was var.module_version
+  tag: latest
+  pullPolicy: IfNotPresent
+
+# crm-api-db-init init container (db-init:latest in terraform).
+dbInit:
+  enabled: true
+  image: 745106446559.dkr.ecr.eu-west-1.amazonaws.com/db-init:latest
+  imagePullPolicy: Always
+  # was local.initDbScript
+  initSql: |
+    CREATE DATABASE IF NOT EXISTS currency CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;
+
+# Container resource requests (var.crm_api_request_*).
+resources:
+  requests:
+    cpu: 25m
+    memory: 150Mi
+
+# var.use_ondemand_instances -> node selector workload class.
+useOndemandInstances: false
+
+serviceAccount:
+  create: true
+  name: crm-api
+  # was aws_iam_role.crm-api.arn — set to the IAM role ARN provisioned by Terraform.
+  roleArn: ""
+
+# --- RDS / MySQL (var.rds_*) ---
+rds:
+  host: ""
+  masterUsername: ""
+  masterPassword: ""
+
+# --- Redis (var.general_redis_*) ---
+redis:
+  host: ""
+  port: ""
+
+# CORS: defaults to https://<brandHostName> when empty (was var.api_allowed_origins).
+apiAllowedOrigins: ""
+
+# --- Unleash key resolution (locals.unleash_api_key) ---
+unleash:
+  # If set, takes precedence over the environment-specific keys below.
+  apiKeyOverride: ""
+  productionApiKey: ""
+  stagingApiKey: ""
+
+# --- Alert manager implementation (locals.alert_manager_implementation) ---
+alertManager:
+  productionImplementation: incident.io
+  stagingImplementation: logger
+
+# --- Rewards backend gRPC key resolution (REWARDS_V3_GRPC_X_API_KEY) ---
+rewards:
+  # var.crm_api_rewards_backend_grpc_api_key — if set, takes precedence.
+  backendGrpcApiKeyOverride: ""
+
+# DEVICE_AUTH_ENABLED: empty -> "false" in production, "true" otherwise
+# (was var.crm_api_device_auth_enabled).
+deviceAuthEnabled: ""
+
+# --- Autoscaling (KEDA ScaledObject) ---
+autoscaling:
+  # var.use_pod_autoscaling — renders the ScaledObject when true.
+  enabled: false
+  pollingInterval: 5
+  cooldownPeriod: 300
+  maxReplicaCount: 5
+  cpu:
+    enabled: false
+    type: Utilization
+    value: "80"
+  memory:
+    enabled: false
+    type: Utilization
+    value: "90"
+
+# --- Gateway API HTTPRoute (var.kubernetes_gateway_api_enabled) ---
+gatewayApi:
+  enabled: false
+  # was var.environment_infra_shared_k8_cluster_name (underscores replaced with hyphens).
+  sharedClusterName: ""
+
+# --- Prisma migrations Job ---
+prisma:
+  enabled: true
+  # was var.prisma_image_repository_url
+  imageRepository: ""
+  # was var.prisma_module_version
+  imageTag: ""
+  # was var.use_analytics
+  useAnalytics: "false"

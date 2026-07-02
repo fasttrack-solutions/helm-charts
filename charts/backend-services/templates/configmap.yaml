@@ -1,0 +1,65 @@
+{{/* Computed / composite entries (the terraform locals + interpolated values). */}}
+{{- $cors := .Values.apiAllowedOrigins -}}
+{{- if eq .Values.apiAllowedOrigins "" -}}
+{{- $cors = printf "https://%s" .Values.brandHostName -}}
+{{- end -}}
+
+{{- $unleashKey := .Values.unleash.apiKeyOverride -}}
+{{- if eq .Values.unleash.apiKeyOverride "" -}}
+{{- if eq .Values.environmentType "production" -}}
+{{- $unleashKey = .Values.unleash.productionApiKey -}}
+{{- else -}}
+{{- $unleashKey = .Values.unleash.stagingApiKey -}}
+{{- end -}}
+{{- end -}}
+
+{{- $alertManager := .Values.alertManager.stagingImplementation -}}
+{{- if eq .Values.environmentType "production" -}}
+{{- $alertManager = .Values.alertManager.productionImplementation -}}
+{{- end -}}
+
+{{- $rewardsKey := .Values.rewards.backendGrpcApiKey -}}
+{{- if ne .Values.rewards.backendGrpcApiKeyOverride "" -}}
+{{- $rewardsKey = .Values.rewards.backendGrpcApiKeyOverride -}}
+{{- end -}}
+
+{{- $deviceAuth := .Values.deviceAuthEnabled -}}
+{{- if eq .Values.deviceAuthEnabled "" -}}
+{{- if eq .Values.environmentType "production" -}}
+{{- $deviceAuth = "false" -}}
+{{- else -}}
+{{- $deviceAuth = "true" -}}
+{{- end -}}
+{{- end -}}
+
+{{- $dbHostBase := printf "%s:%s@tcp(%s:3306)" .Values.rds.masterUsername .Values.rds.masterPassword .Values.rds.host -}}
+
+{{- $computed := dict
+  "STAGE" .Values.environmentType
+  "DATABASE_URL" (printf "%s/%%s?parseTime=true" $dbHostBase)
+  "DATABASE_HOST" $dbHostBase
+  "DATABASE_READONLY_URL" (printf "%s/%%s?parseTime=true" $dbHostBase)
+  "REDIS_URL" (printf "%s:%s" .Values.redis.host (toString .Values.redis.port))
+  "BRAND_ID" .Values.brandId
+  "BRAND" .Values.brandName
+  "BRAND_HOST_NAME" .Values.brandHostName
+  "CORS_ALLOW_ORIGINS" $cors
+  "AWS_S3_EXPORT_BUCKET_NAME" (include "crm-api.exportBucket" .)
+  "REWARDS_V3_GRPC_X_API_KEY" $rewardsKey
+  "UNLEASH_API_KEY" $unleashKey
+  "ALERT_MANAGER_IMPLEMENTATION" $alertManager
+  "DEVICE_AUTH_ENABLED" $deviceAuth
+  "KUBERNETES_NAMESPACE" (include "crm-api.namespace" .)
+-}}
+
+{{/* Computed entries win over the pass-through .Values.config map. */}}
+{{- $data := merge $computed .Values.config -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: crm-api
+  namespace: {{ include "crm-api.namespace" . }}
+data:
+{{- range $k, $v := $data }}
+  {{ $k }}: {{ toString $v | quote }}
+{{- end }}
