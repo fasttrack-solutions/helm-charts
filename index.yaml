@@ -96,16 +96,6 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/crm-api-0.1.0-9b9dbf9/crm-api-0.1.0-9b9dbf9.tgz
     version: 0.1.0-9b9dbf9
-  - apiVersion: v2
-    appVersion: latest
-    created: "2026-07-02T13:59:06.406963489Z"
-    description: Fast Track CRM API service (converted from oneclickdeployment/terraform_v1)
-    digest: 7a9041e8839da9cc2c6dbb57fa758b65a863b0723e138b4bf86d3e13d2204898
-    name: crm-api
-    type: application
-    urls:
-    - https://github.com/fasttrack-solutions/helm-charts/releases/download/crm-api-0.1.0-08de99b/crm-api-0.1.0-08de99b.tgz
-    version: 0.1.0-08de99b
   cube-stack:
   - apiVersion: v1
     appVersion: 0.28.26
