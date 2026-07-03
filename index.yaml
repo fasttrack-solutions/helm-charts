@@ -117,6 +117,16 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/crm-api-0.1.0-9b9dbf9/crm-api-0.1.0-9b9dbf9.tgz
     version: 0.1.0-9b9dbf9
+  - apiVersion: v2
+    appVersion: latest
+    created: "2026-07-03T09:52:25.692669406Z"
+    description: Fast Track CRM API service (converted from oneclickdeployment/terraform_v1)
+    digest: b1444d45c4c2597c96766a831ae59b58bdef6a5bd6cdbcda1d2c6b16cf1b33d0
+    name: crm-api
+    type: application
+    urls:
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/crm-api-0.1.0-1ca5200/crm-api-0.1.0-1ca5200.tgz
+    version: 0.1.0-1ca5200
   cube-stack:
   - apiVersion: v1
     appVersion: 0.28.26
@@ -475,6 +485,20 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/cubestore-0.1.0/cubestore-0.1.0.tgz
     version: 0.1.0
+  ft-service:
+  - apiVersion: v2
+    created: "2026-07-03T09:52:25.907078517Z"
+    description: Generic FastTrack service chart. Owns the shared Kubernetes workload
+      skeleton (Deployment, Service, HTTPRoute, KEDA ScaledObject, ServiceAccount/IRSA,
+      CronJob, NetworkPolicy) so each service supplies only a thin values.yaml of
+      placeholders. Consumed as a Helm *library* by per-service application charts
+      via `{{ include }}`.
+    digest: e0f24e88119fb7516368d6abfe4c033f4ddedf929d20e1607b892d344fa10c4d
+    name: ft-service
+    type: library
+    urls:
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/ft-service-1.0.0-1ca5200/ft-service-1.0.0-1ca5200.tgz
+    version: 1.0.0-1ca5200
   service-account:
   - apiVersion: v1
     appVersion: 1.0.0
@@ -515,4 +539,4 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/serviceaccount-0.1.0/serviceaccount-0.1.0.tgz
     version: 0.1.0
-generated: "2026-07-02T14:27:06.410747651Z"
+generated: "2026-07-03T09:52:25.907166472Z"
