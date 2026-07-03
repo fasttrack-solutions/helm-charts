@@ -1,1 +1,29 @@
-{{ include "ft-service.scaledobject" . }}
+{{- if and .Values.autoscaling.enabled (or .Values.autoscaling.cpu.enabled .Values.autoscaling.memory.enabled) }}
+apiVersion: keda.sh/v1
+kind: ScaledObject
+metadata:
+  name: crm-api
+  namespace: {{ include "crm-api.namespace" . }}
+spec:
+  scaleTargetRef:
+    name: crm-api
+  pollingInterval: {{ .Values.autoscaling.pollingInterval }}
+  cooldownPeriod: {{ .Values.autoscaling.cooldownPeriod }}
+  minReplicaCount: {{ include "crm-api.minReplicas" . }}
+  maxReplicaCount: {{ .Values.autoscaling.maxReplicaCount }}
+  advanced:
+    restoreToOriginalReplicaCount: true
+  triggers:
+    {{- if .Values.autoscaling.cpu.enabled }}
+    - type: cpu
+      metadata:
+        type: {{ .Values.autoscaling.cpu.type | quote }}
+        value: {{ .Values.autoscaling.cpu.value | quote }}
+    {{- end }}
+    {{- if .Values.autoscaling.memory.enabled }}
+    - type: memory
+      metadata:
+        type: {{ .Values.autoscaling.memory.type | quote }}
+        value: {{ .Values.autoscaling.memory.value | quote }}
+    {{- end }}
+{{- end }}

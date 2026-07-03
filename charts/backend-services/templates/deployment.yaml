@@ -1,1 +1,82 @@
-{{ include "ft-service.deployment" . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crm-api
+  namespace: {{ include "crm-api.namespace" . }}
+  labels:
+    app: crm-api
+  annotations:
+    reloader.stakater.com/auto: "true"
+spec:
+  replicas: {{ include "crm-api.minReplicas" . }}
+  selector:
+    matchLabels:
+      app: crm-api
+  template:
+    metadata:
+      labels:
+        app: crm-api
+        spotinst.io/restrict-scale-down: "true"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "9090"
+    spec:
+      tolerations:
+        - key: arch
+          operator: Equal
+          value: arm64
+          effect: NoSchedule
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              preference:
+                matchExpressions:
+                  - key: kubernetes.io/arch
+                    operator: In
+                    values:
+                      - arm64
+      nodeSelector:
+        workload: {{ include "crm-api.workload" . }}
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: crm-api
+      {{- if .Values.dbInit.enabled }}
+      initContainers:
+        - name: crm-api-db-init
+          image: {{ .Values.dbInit.image | quote }}
+          imagePullPolicy: {{ .Values.dbInit.imagePullPolicy }}
+          env:
+            - name: MYSQL_HOST
+              value: {{ .Values.rds.host | quote }}
+            - name: MYSQL_USER
+              value: {{ .Values.rds.masterUsername | quote }}
+            - name: MYSQL_PASSWORD
+              value: {{ .Values.rds.masterPassword | quote }}
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: INIT_SQL
+              value: {{ .Values.dbInit.initSql | quote }}
+      {{- end }}
+      containers:
+        - name: crm-api
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - /app/goapp
+          resources:
+            requests:
+              cpu: {{ .Values.resources.requests.cpu | quote }}
+              memory: {{ .Values.resources.requests.memory | quote }}
+          ports:
+            - containerPort: 3000
+            - containerPort: 6060
+            - containerPort: 1337
+          envFrom:
+            - configMapRef:
+                name: crm-api
