@@ -7,7 +7,8 @@ name: Release Charts
 # a read-only token, e.g.:
 #   helm repo add fasttrack \
 #     https://raw.githubusercontent.com/fasttrack-solutions/helm-charts/gh-pages/ \
-#     --username "$TOKEN" --password "$TOKEN"
+#     --username x-access-token --password "$TOKEN"
+# (GitHub ignores the basic-auth username; only the token authenticates.)
 # The chart URLs in index.yaml are relative filenames, so Helm resolves them
 # against the same raw base (same host => basic-auth credentials are reused).
 
