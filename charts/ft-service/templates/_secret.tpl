@@ -1,0 +1,29 @@
+{{/*
+ft-service.secret — Opaque Secret from a flat secret.stringData map. Arbitrary
+KEY: value pairs; ArgoCD-Vault `<path:...>` placeholders pass through verbatim
+(quoting is load-bearing for argocd-vault-plugin — do not strip). Guarded by
+secret.enabled (default false). Same note as the configmap: services that
+assemble DATABASE_URL/CLICKHOUSE_URL in-template from global.envSettings keep
+their own secret.yaml stub.
+*/}}
+{{- define "ft-service.secret" -}}
+{{- $secret := (index .Values "secret") | default dict -}}
+{{- if $secret.enabled -}}
+{{- $name := default (printf "%s-secret" (include "ft-service.name" .)) $secret.name -}}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ include "ft-service.name" . }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+    argocd.argoproj.io/sync-wave: "-1"
+type: Opaque
+stringData:
+  {{- range $k, $v := ($secret.stringData | default dict) }}
+  {{ $k }}: {{ $v | quote }}
+  {{- end }}
+{{- end }}
+{{- end -}}

@@ -1,0 +1,147 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# ft-service — REFERENCE values (documentation of the full schema).
+#
+# IMPORTANT: this is a Helm *library* chart. These values do NOT merge into a
+# consuming chart's `.Values`. Every default here is also applied INLINE in the
+# templates, so a consuming service only needs to set what differs from default.
+# This file exists for documentation + `helm lint`; it is never the source of
+# the runtime defaults.
+#
+# The ONLY hard requirement on a consumer is `deployment.image.repository`.
+# A minimal stateless service is ~12 lines (see examples/minimal-consumer).
+# ─────────────────────────────────────────────────────────────────────────────
+
+deployment:
+  # name: ""                       # default: the consuming chart's name (.Chart.Name)
+  enabled: true                    # render the Deployment at all (false = skip)
+  # deployFlagKey: ""              # if set, also gated by global.deploymentFlags.<key>.deploy
+  replicaCount: 1                  # prod usually 2 via env-layer override
+  reloader: true                   # reloader.stakater.com/auto annotation
+  syncWave: "1"                    # argocd.argoproj.io/sync-wave for the Deployment
+
+  image:
+    repository: ""                 # REQUIRED, e.g. 745106446559.dkr.ecr.eu-west-1.amazonaws.com/<svc>
+    tag: ""                        # leave empty — injected at the umbrella+env layer
+    tagPrefix: ""                  # e.g. "live-" / "aggregated-" / "migrations-"
+  # imagePullPolicy: ""            # default: cluster default (Always for :latest)
+  # imagePullSecrets: []           # usually empty (ECR via node IAM)
+
+  # command: []                    # container command override (rare)
+  # args: []                       # container args override (rare)
+
+  ports:                           # container ports (empty list allowed)
+    - { name: http, containerPort: 3000 }
+
+  configMapRef: ""                 # envFrom configMap name; default = service name
+  # secretRef: ""                  # envFrom secret name (optional)
+  # extraEnvFrom: []               # extra envFrom entries appended after the above
+  # extraEnv: []                   # extra env vars incl. valueFrom.fieldRef (downward API)
+
+  # resources omitted by default (the ~19% with no requests). Set as needed:
+  # resources:
+  #   requests: { cpu: "25m", memory: "150Mi" }
+  #   limits:   { memory: "512Mi" }
+
+  nodeSelector:                    # arm64 common pool by default
+    workload: common
+  # tolerations: []                # arm64 NoSchedule etc.
+  # affinity: {}                   # arm64 preferred / SPOT capacityType
+  # topologySpreadConstraints: []  # ScheduleAnyway across hostname
+  # strategy: {}                   # e.g. { type: Recreate }
+  # podLabels: {}                  # e.g. { spotinst.io/restrict-scale-down: "true" }
+  # podAnnotations: {}
+  # annotations: {}                # extra Deployment-level annotations
+
+  prometheus:
+    enabled: false                 # adds prometheus.io/scrape pod annotations
+    path: /metrics
+    port: 9090
+
+  # livenessProbe: {}              # full probe spec (rare — 3%)
+  # readinessProbe: {}
+  # podSecurityContext: {}         # runAsNonRoot/fsGroup (opt-in for new services)
+  # securityContext: {}            # container-level (drop ALL etc.)
+  # automountServiceAccountToken:  # omitted unless explicitly set
+  # serviceAccountName: ""         # use an existing SA without creating one
+  # initContainers: []             # full container specs (passthrough)
+  # volumes: []                    # full volume specs (passthrough)
+  # volumeMounts: []               # full volumeMount specs (passthrough)
+  # extraContainers: []            # sidecars (multi-container pods)
+
+# db-init convenience initContainer (the universal MySQL-bootstrap pattern)
+dbInit:
+  enabled: false
+  image: "745106446559.dkr.ecr.eu-west-1.amazonaws.com/db-init:latest"
+  # secretRef: <svc>-db-init-secret   # OR
+  # env: [ { name: MYSQL_HOST, value: ... }, ... ]
+
+# Shortcut for the very common analytics-central-config + patch configMap mounts.
+analyticsConfig:
+  enabled: false
+
+service:
+  enabled: true
+  # name: ""                       # default = service name
+  type: ClusterIP
+  syncWave: "1"
+  ports:                           # multi-port supported (HTTP + gRPC + pprof)
+    - { name: http, port: 80, targetPort: 3000 }
+  # port: {}                       # back-compat single-port shorthand
+  # annotations: {}                # legacy Ambassador Mapping (getambassador.io/config)
+
+serviceAccount:
+  create: false
+  # name: ""
+  # roleArn: ""                    # explicit IRSA role ARN, OR build it:
+  # roleNamePattern: "<svc>-%s"    # %s = global.brandID -> arn:aws:iam::<accountID>:role/<svc>-<brandID>
+  # annotations: {}
+
+# Gateway API HTTPRoute (strategic ingress). Double-gated by global.gatewayApi.enabled.
+gatewayApi:
+  enabled: false
+  # prefix: "/<svc>/"              # default = "/<name>/"
+  # backendPort: 80
+  parentGateway:
+    name: main-gateway
+    namespace: gateway
+    sectionName: https
+
+# KEDA autoscaling (replaces HPA + hand-rolled ScaledObjects)
+scaledObject:
+  enabled: false
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  # cooldownPeriod, pollingInterval, idleReplicaCount: optional
+  triggers: []                     # required when enabled, e.g.
+  #   - { type: cpu,    metadata: { type: Utilization, value: "70" } }
+  #   - { type: memory, metadata: { type: Utilization, value: "75" } }
+  #   - { type: rabbitmq, metadata: { queueName: ..., queueLength: "50", ... } }
+
+# Flat literal-env ConfigMap (ai-soc style). Omit / keep service's own stub for
+# global.envSettings-assembled config.
+configMap:
+  enabled: true
+  # name: ""                       # default = service name
+  data: {}
+
+# Flat Opaque Secret. Vault <path:...> placeholders pass through verbatim.
+secret:
+  enabled: false
+  # name: ""                       # default = "<svc>-secret"
+  stringData: {}
+
+cronjob:
+  enabled: false
+  # schedule: "0 * * * *"          # required when enabled
+  # suspend, concurrencyPolicy, restartPolicy, command, args: optional
+
+networkPolicy:
+  enabled: false
+  egress: []
+
+# Last-resort escape hatch: arbitrary K8s objects rendered verbatim.
+extraManifests: []
+
+# Injected by the argo-deployments umbrella/env layer (chart -> global -> cluster -> env).
+# Read by httproute, IRSA arn, and the deployFlagKey gate. Never set per-service.
+global: {}

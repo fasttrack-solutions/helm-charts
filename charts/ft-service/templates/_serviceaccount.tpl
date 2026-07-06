@@ -1,0 +1,28 @@
+{{/*
+ft-service.serviceaccount — ServiceAccount with optional IRSA role-arn annotation.
+The IAM role/policy itself stays in Terraform; this only renders the SA that
+points at the TF-managed role ARN. Guarded by serviceAccount.create.
+*/}}
+{{- define "ft-service.serviceaccount" -}}
+{{- $sa := (index .Values "serviceAccount") | default dict -}}
+{{- if $sa.create -}}
+{{- $arn := include "ft-service.irsaRoleArn" . -}}
+{{- $extra := $sa.annotations | default dict -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "ft-service.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ include "ft-service.name" . }}
+  {{- if or $arn $extra }}
+  annotations:
+    {{- with $extra }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- if $arn }}
+    eks.amazonaws.com/role-arn: {{ $arn }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end -}}
