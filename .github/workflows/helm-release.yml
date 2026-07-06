@@ -1,5 +1,17 @@
 name: Release Charts
 
+# Publishes a self-contained classic Helm repo (index.yaml + *.tgz) to the
+# `gh-pages` branch tree. Because this repo is PRIVATE, GitHub Pages does not
+# serve it and chart-releaser's Releases-based layout can't be fetched with
+# HTTP basic auth. Consumers instead fetch over raw.githubusercontent.com with
+# a read-only token, e.g.:
+#   helm repo add fasttrack \
+#     https://raw.githubusercontent.com/fasttrack-solutions/helm-charts/gh-pages/ \
+#     --username x-access-token --password "$TOKEN"
+# (GitHub ignores the basic-auth username; only the token authenticates.)
+# The chart URLs in index.yaml are relative filenames, so Helm resolves them
+# against the same raw base (same host => basic-auth credentials are reused).
+
 on:
   push:
     branches:
@@ -8,6 +20,8 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # v3.6.0
@@ -22,9 +36,39 @@ jobs:
       - name: Install Helm
         uses: azure/setup-helm@18bc76811624f360dbd7f18c2d4ecb32c7b87bab # v1.1
         with:
-          version: v2.16.8
+          version: v3.14.4
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@a3454e46a6f5ac4811069a381e646961dda2e1bf # v1.4.0
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      - name: Package charts and build index
+        run: |
+          set -euo pipefail
+          OUT="$(mktemp -d)"
+          for chart in charts/*/; do
+            [ -f "${chart}Chart.yaml" ] || continue
+            # Resolve local (file://) sub-chart dependencies before packaging.
+            helm dependency build "$chart" || helm dependency update "$chart" || true
+            helm package "$chart" -d "$OUT"
+          done
+          # Relative (bare-filename) URLs so the index is portable across the
+          # raw base URL used by consumers.
+          helm repo index "$OUT"
+          echo "OUT=$OUT" >> "$GITHUB_ENV"
+
+      - name: Publish to gh-pages
+        run: |
+          set -euo pipefail
+          git fetch origin gh-pages || true
+          if git show-ref --verify --quiet refs/remotes/origin/gh-pages; then
+            git worktree add gh-pages-wt origin/gh-pages
+          else
+            git worktree add --orphan -b gh-pages gh-pages-wt
+          fi
+          cp "$OUT"/*.tgz gh-pages-wt/
+          cp "$OUT"/index.yaml gh-pages-wt/index.yaml
+          cd gh-pages-wt
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No chart changes to publish."
+          else
+            git commit -m "Publish charts ($GITHUB_SHA)"
+            git push origin HEAD:gh-pages
+          fi
