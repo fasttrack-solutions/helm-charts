@@ -1,7 +1,8 @@
 {{/*
 ft-service.deployment — the generic Deployment.
-Everything except `deployment.image.repository` has an inline default, so a
-minimal consumer (just image + chart name) renders a valid Deployment.
+Everything has an inline default except the image repository, which must come
+from deployment.image.repository OR global.image.repository (see ft-service.image),
+so a minimal consumer (just image + chart name) renders a valid Deployment.
 */}}
 {{- if eq (include "ft-service.enabled" .) "true" -}}
 {{- $name := include "ft-service.name" . -}}
@@ -89,11 +90,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ $name }}
-          {{- $img := $d.image | default dict }}
-          {{- $repo := required "deployment.image.repository is required" $img.repository }}
-          {{- $tag := $img.tag | default "" | toString }}
-          {{- $prefix := $img.tagPrefix | default "" }}
-          image: "{{ $repo }}{{ if $tag }}:{{ $prefix }}{{ $tag }}{{ end }}"
+          image: {{ include "ft-service.image" . | quote }}
           {{- with $d.imagePullPolicy }}
           imagePullPolicy: {{ . }}
           {{- end }}

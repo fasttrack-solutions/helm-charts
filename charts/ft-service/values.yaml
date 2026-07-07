@@ -7,7 +7,8 @@
 # This file exists for documentation + `helm lint`; it is never the source of
 # the runtime defaults.
 #
-# The ONLY hard requirement on a consumer is `deployment.image.repository`.
+# The ONLY hard requirement on a consumer is an image repository — from either
+# `deployment.image.repository` or the shared `global.image.repository`.
 # A minimal stateless service is ~12 lines (see examples/minimal-consumer).
 # ─────────────────────────────────────────────────────────────────────────────
 
@@ -19,8 +20,10 @@ deployment:
   reloader: true                   # reloader.stakater.com/auto annotation
   syncWave: "1"                    # argocd.argoproj.io/sync-wave for the Deployment
 
-  image:
-    repository: ""                 # REQUIRED, e.g. 745106446559.dkr.ecr.eu-west-1.amazonaws.com/<svc>
+  image:                           # each field falls back to global.image.* (deployment wins)
+    repository: ""                 # e.g. 745106446559.dkr.ecr.eu-west-1.amazonaws.com/<svc>
+    #                              # required from HERE or global.image.repository
+    # registry: ""                 # optional; prefixed as <registry>/<repository>
     tag: ""                        # leave empty — injected at the umbrella+env layer
     tagPrefix: ""                  # e.g. "live-" / "aggregated-" / "migrations-"
   # imagePullPolicy: ""            # default: cluster default (Always for :latest)
@@ -165,3 +168,8 @@ extraManifests: []
 # Injected by the argo-deployments umbrella/env layer (chart -> global -> cluster -> env).
 # Read by httproute, IRSA arn, and the deployFlagKey gate. Never set per-service.
 global: {}
+  # image:                         # shared image defaults; deployment.image.* overrides
+  #   registry: ""                 # optional; prefixed as <registry>/<repository>
+  #   repository: ""               # e.g. 745106446559.dkr.ecr.eu-west-1.amazonaws.com/<svc>
+  #   tag: ""                      # injected at the env layer
+  #   tagPrefix: ""

@@ -9,9 +9,6 @@ stay Deployments — this is only for true Kubernetes CronJobs.
 {{- if $cronjob.enabled -}}
 {{- $name := include "ft-service.name" . -}}
 {{- $d := (index .Values "deployment") | default dict -}}
-{{- $img := $d.image | default dict -}}
-{{- $repo := required "deployment.image.repository is required" $img.repository -}}
-{{- $tag := $img.tag | default "" | toString -}}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -47,7 +44,7 @@ spec:
           {{- end }}
           containers:
             - name: {{ $name }}
-              image: "{{ $repo }}{{ if $tag }}:{{ $tag }}{{ end }}"
+              image: {{ include "ft-service.image" . | quote }}
               {{- with $cronjob.command }}
               command:
                 {{- toYaml . | nindent 16 }}

@@ -11,14 +11,30 @@ We deliberately avoid sprig `dig` (it hard-asserts map[string]interface{} and
 fails on Helm's chartutil.Values named type); we use index / dot-access / with /
 hasKey, which work on any map kind via reflection and preserve value types.
 
-The only hard requirement on a consumer is `deployment.image.repository`; the
-service name defaults to the consuming chart's name (`.Chart.Name`).
+The image repository may come from either deployment.image.* or the shared
+global.image.* section (deployment wins); the service name defaults to the
+consuming chart's name (`.Chart.Name`).
 */}}
 
 {{/* Service / workload name: deployment.name, else the consuming chart's name. */}}
 {{- define "ft-service.name" -}}
 {{- $d := (index .Values "deployment") | default dict -}}
 {{- default .Chart.Name $d.name -}}
+{{- end -}}
+
+{{/* Fully-resolved container image ref. Each field falls back deployment.image.*
+     -> global.image.*. repository is required from ONE of the two sources; an
+     optional registry is prefixed, and tagPrefix+tag build the ":<prefix><tag>"
+     suffix (tag omitted -> injected at the umbrella+env layer). */}}
+{{- define "ft-service.image" -}}
+{{- $di := ((index .Values "deployment") | default dict).image | default dict -}}
+{{- $gi := ((index .Values "global") | default dict).image | default dict -}}
+{{- $repo := $di.repository | default $gi.repository | required "image repository is required: set deployment.image.repository or global.image.repository" -}}
+{{- $registry := $di.registry | default $gi.registry | default "" -}}
+{{- if $registry -}}{{- $repo = printf "%s/%s" (trimSuffix "/" (toString $registry)) $repo -}}{{- end -}}
+{{- $tag := $di.tag | default $gi.tag | default "" | toString -}}
+{{- $prefix := $di.tagPrefix | default $gi.tagPrefix | default "" -}}
+{{- printf "%s%s" $repo (ternary (printf ":%s%s" $prefix $tag) "" (ne $tag "")) -}}
 {{- end -}}
 
 {{/* Fullname: release name + chart name, capped at 63 chars. Falls back to ft-service.name. */}}
