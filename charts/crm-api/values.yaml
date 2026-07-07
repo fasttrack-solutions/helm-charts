@@ -1,8 +1,10 @@
-# ── ft-service library schema ─────────────────────────────────────────────────
+# ft-service library schema defaults.
+# All crm-api-specific values (rds, redis, unleash, alertManager, config, etc.)
+# live in argo-deployments values files, not here.
 
 deployment:
   image:
-    repository: 745106446559.dkr.ecr.eu-west-1.amazonaws.com/crm-api
+    repository: ""
     tag: latest
     pullPolicy: IfNotPresent
   replicaCount: 1
@@ -25,17 +27,7 @@ deployment:
     path: /metrics
   dbInit:
     enabled: true
-    env:
-      - name: MYSQL_HOST
-        value: ""
-      - name: MYSQL_USER
-        value: ""
-      - name: MYSQL_PASSWORD
-        value: ""
-      - name: MYSQL_PORT
-        value: "3306"
-      - name: INIT_SQL
-        value: "CREATE DATABASE IF NOT EXISTS currency CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
+    env: []
 
 service:
   ports:
@@ -67,46 +59,3 @@ gatewayApi:
     name: main-gateway
     namespace: gateway
     sectionName: https
-
-# ── crm-api-specific keys ─────────────────────────────────────────────────────
-# Consumed by templates/configmap.yaml (TODO). Not read by the ft-service library.
-
-environmentType: production
-
-brandId: ""
-brandName: ""
-brandHostName: ""
-
-rds:
-  host: ""
-  masterUsername: ""
-  masterPassword: ""
-
-redis:
-  host: ""
-  port: ""
-
-apiAllowedOrigins: ""
-
-unleash:
-  apiKeyOverride: ""
-  productionApiKey: ""
-  stagingApiKey: ""
-
-alertManager:
-  productionImplementation: incident.io
-  stagingImplementation: logger
-
-rewards:
-  backendGrpcApiKeyOverride: ""
-  backendGrpcApiKey: ""
-
-deviceAuthEnabled: ""
-
-prisma:
-  enabled: true
-  imageRepository: 745106446559.dkr.ecr.eu-west-1.amazonaws.com/crm-api-prisma
-  imageTag: ""
-  useAnalytics: "false"
-
-config: {}
