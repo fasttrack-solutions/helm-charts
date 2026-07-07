@@ -5,4 +5,4 @@ description: >-
   (Deployment, Service, HTTPRoute, KEDA ScaledObject, ServiceAccount/IRSA, CronJob,
   NetworkPolicy). Deploy directly — inject service-specific values from argo-deployments.
 type: application
-version: 1.0.0
+version: 1.1.0
