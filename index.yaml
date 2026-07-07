@@ -133,6 +133,20 @@ entries:
     version: 0.1.0-5e93884
   - apiVersion: v2
     appVersion: latest
+    created: "2026-07-07T08:10:31.475009188Z"
+    dependencies:
+    - name: ft-service
+      repository: https://fasttrack-solutions.github.io/helm-charts
+      version: '>=1.0.0-0'
+    description: CRM API Helm chart — thin wrapper over the ft-service library
+    digest: dba464cf93efae19bf71a92c9649c58dabde0164bc6229693bca84e9c26f0d8e
+    name: crm-api
+    type: application
+    urls:
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/crm-api-0.1.0-453633e/crm-api-0.1.0-453633e.tgz
+    version: 0.1.0-453633e
+  - apiVersion: v2
+    appVersion: latest
     created: "2026-07-03T09:52:25.692669406Z"
     description: Fast Track CRM API service (converted from oneclickdeployment/terraform_v1)
     digest: b1444d45c4c2597c96766a831ae59b58bdef6a5bd6cdbcda1d2c6b16cf1b33d0
@@ -592,4 +606,4 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/serviceaccount-0.1.0/serviceaccount-0.1.0.tgz
     version: 0.1.0
-generated: "2026-07-07T07:58:15.821498307Z"
+generated: "2026-07-07T08:10:31.475103204Z"
