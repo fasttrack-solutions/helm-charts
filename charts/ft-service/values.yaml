@@ -152,13 +152,12 @@ externalSecret:
   target:
     name: ""            # default: service name
     # template: {}      # ESO target template (engine: v2) for key transformation
-  # Vault path shared by all data items (required). Set in the ApplicationSet, e.g.
-  # remoteKey: "releases/clusters/{{index .path.segments 2}}/{{index .path.segments 3}}/customers.yaml"
-  remoteKey: ""
+  # remoteKey: ""    # override the whole Vault path; default built from
+  #                  # <global.clusterName>/<namespace>/<serviceName>
+  # List of secret NAMES — each is both the K8s secretKey and the Vault property.
   data: []
-  # - secretKey: CH_DB_NAME              # -> property CH_DB_NAME at the path above
-  # - secretKey: CH_DB_PASSWORD
-  #   remoteKey: other/vault/path        # override the path for just this item
+  # - CH_DB_NAME
+  # - CH_DB_PASSWORD
 
 # Last-resort escape hatch: arbitrary K8s objects rendered verbatim.
 extraManifests: []
