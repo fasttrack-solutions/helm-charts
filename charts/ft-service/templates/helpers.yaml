@@ -21,6 +21,23 @@ service name defaults to the consuming chart's name (`.Chart.Name`).
 {{- default .Chart.Name $d.name -}}
 {{- end -}}
 
+{{/* Fullname: release name + chart name, capped at 63 chars. Falls back to ft-service.name. */}}
+{{- define "ft-service.fullname" -}}
+{{- $name := include "ft-service.name" . -}}
+{{- if contains $name .Release.Name -}}
+{{- .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Common labels. */}}
+{{- define "ft-service.labels" -}}
+app.kubernetes.io/name: {{ include "ft-service.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end -}}
+
 {{/* Render gate: local deployment.enabled (default true) AND, if
      deployment.deployFlagKey is set, global.deploymentFlags.<key>.deploy
      (default true). Returns the string "true"/"false". */}}
