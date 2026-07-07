@@ -5,7 +5,6 @@ minimal consumer (just image + chart name) renders a valid Deployment.
 */}}
 {{- if eq (include "ft-service.enabled" .) "true" -}}
 {{- $name := include "ft-service.name" . -}}
-{{- $service := include "ft-service.service" . -}}
 
 {{- $d := (index .Values "deployment") | default dict -}}
 {{- $reloader := true }}{{- if hasKey $d "reloader" }}{{- $reloader = $d.reloader }}{{- end }}
@@ -13,10 +12,10 @@ minimal consumer (just image + chart name) renders a valid Deployment.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ $service }}
+  name: {{ $name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app: {{ $service }}
+    app: {{ $name }}
   annotations:
     {{- if $reloader }}
     reloader.stakater.com/auto: "true"
