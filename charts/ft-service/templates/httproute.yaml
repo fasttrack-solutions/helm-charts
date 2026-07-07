@@ -3,7 +3,6 @@ ft-service.httproute — Gateway API HTTPRoute (the strategic ingress path).
 Double-gated: per-service gatewayApi.enabled AND cluster-level
 global.gatewayApi.enabled. Mirrors the existing usage-metrics-api httproute.
 */}}
-{{- define "ft-service.httproute" -}}
 {{- $ga := (index .Values "gatewayApi") | default dict -}}
 {{- $g := (index .Values "global") | default dict -}}
 {{- $gg := (index $g "gatewayApi") | default dict -}}
@@ -51,4 +50,3 @@ spec:
         - name: {{ $name }}
           port: {{ $ga.backendPort | default 80 }}
 {{- end }}
-{{- end -}}

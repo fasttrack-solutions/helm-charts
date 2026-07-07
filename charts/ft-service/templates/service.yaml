@@ -3,7 +3,6 @@ ft-service.service — ClusterIP Service. Guarded by service.enabled (default tr
 Supports a multi-port list (service.ports) and back-compat single port (service.port).
 Legacy Ambassador Mappings flow through verbatim as service.annotations.
 */}}
-{{- define "ft-service.service" -}}
 {{- $svc := (index .Values "service") | default dict -}}
 {{- $enabled := true }}{{- if hasKey $svc "enabled" }}{{- $enabled = $svc.enabled }}{{- end -}}
 {{- if $enabled -}}
@@ -35,4 +34,3 @@ spec:
       protocol: {{ .protocol | default "TCP" }}
     {{- end }}
 {{- end }}
-{{- end -}}

@@ -5,7 +5,6 @@ configMapRef / secretRef as the Deployment. Guarded by cronjob.enabled.
 NOTE: long-lived services that schedule work via an internal CRON_SCHEDULE env
 stay Deployments — this is only for true Kubernetes CronJobs.
 */}}
-{{- define "ft-service.cronjob" -}}
 {{- $cj := (index .Values "cronjob") | default dict -}}
 {{- if $cj.enabled -}}
 {{- $name := include "ft-service.name" . -}}
@@ -65,4 +64,3 @@ spec:
                     name: {{ . }}
                 {{- end }}
 {{- end }}
-{{- end -}}

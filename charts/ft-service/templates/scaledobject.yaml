@@ -4,7 +4,6 @@ template_file/null_resource kubectl ScaledObjects and the remote scaling module)
 triggers is a values list, so cpu/memory/rabbitmq/kafka all flow through one schema.
 Guarded by scaledObject.enabled.
 */}}
-{{- define "ft-service.scaledobject" -}}
 {{- $so := (index .Values "scaledObject") | default dict -}}
 {{- if $so.enabled -}}
 {{- $name := include "ft-service.name" . -}}
@@ -36,4 +35,3 @@ spec:
   triggers:
     {{- toYaml $triggers | nindent 4 }}
 {{- end }}
-{{- end -}}

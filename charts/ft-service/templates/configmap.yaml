@@ -10,7 +10,6 @@ NOT call this include. That per-env wiring is genuinely service-specific; the
 shared chart deliberately does not try to genericize it. Guarded by
 configMap.enabled (default true).
 */}}
-{{- define "ft-service.configmap" -}}
 {{- $cm := (index .Values "configMap") | default dict -}}
 {{- $enabled := true }}{{- if hasKey $cm "enabled" }}{{- $enabled = $cm.enabled }}{{- end -}}
 {{- if $enabled -}}
@@ -30,4 +29,3 @@ data:
   {{ $k }}: {{ $v | quote }}
   {{- end }}
 {{- end }}
-{{- end -}}
