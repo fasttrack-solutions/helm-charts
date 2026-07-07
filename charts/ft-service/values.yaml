@@ -71,7 +71,7 @@ deployment:
 # db-init convenience initContainer (the universal MySQL-bootstrap pattern)
 dbInit:
   enabled: false
-  image: "745106446559.dkr.ecr.eu-west-1.amazonaws.com/db-init:latest"
+  image: ""
   # secretRef: <svc>-db-init-secret   # OR
   # env: [ { name: MYSQL_HOST, value: ... }, ... ]
 
