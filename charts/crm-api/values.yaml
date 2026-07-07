@@ -1,0 +1,112 @@
+# ── ft-service library schema ─────────────────────────────────────────────────
+
+deployment:
+  image:
+    repository: 745106446559.dkr.ecr.eu-west-1.amazonaws.com/crm-api
+    tag: latest
+    pullPolicy: IfNotPresent
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: 25m
+      memory: 150Mi
+  command:
+    - /app/goapp
+  ports:
+    - name: http
+      containerPort: 3000
+    - name: debug
+      containerPort: 6060
+    - name: grpc
+      containerPort: 1337
+  prometheus:
+    enabled: true
+    port: 9090
+    path: /metrics
+  dbInit:
+    enabled: true
+    env:
+      - name: MYSQL_HOST
+        value: ""
+      - name: MYSQL_USER
+        value: ""
+      - name: MYSQL_PASSWORD
+        value: ""
+      - name: MYSQL_PORT
+        value: "3306"
+      - name: INIT_SQL
+        value: "CREATE DATABASE IF NOT EXISTS currency CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
+
+service:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+    - name: grpc
+      port: 1337
+      targetPort: 1337
+  annotations:
+    getambassador.io/config: |
+      apiVersion: ambassador/v1
+      kind: Mapping
+      name: crm-api_mapping
+      prefix: /crm-api/
+      service: crm-api
+      timeout_ms: 300000
+
+serviceAccount:
+  create: true
+  roleArn: ""
+
+scaledObject:
+  enabled: false
+
+gatewayApi:
+  enabled: false
+  parentGateway:
+    name: main-gateway
+    namespace: gateway
+    sectionName: https
+
+# ── crm-api-specific keys ─────────────────────────────────────────────────────
+# Consumed by templates/configmap.yaml (TODO). Not read by the ft-service library.
+
+environmentType: production
+
+brandId: ""
+brandName: ""
+brandHostName: ""
+
+rds:
+  host: ""
+  masterUsername: ""
+  masterPassword: ""
+
+redis:
+  host: ""
+  port: ""
+
+apiAllowedOrigins: ""
+
+unleash:
+  apiKeyOverride: ""
+  productionApiKey: ""
+  stagingApiKey: ""
+
+alertManager:
+  productionImplementation: incident.io
+  stagingImplementation: logger
+
+rewards:
+  backendGrpcApiKeyOverride: ""
+  backendGrpcApiKey: ""
+
+deviceAuthEnabled: ""
+
+prisma:
+  enabled: true
+  imageRepository: 745106446559.dkr.ecr.eu-west-1.amazonaws.com/crm-api-prisma
+  imageTag: ""
+  useAnalytics: "false"
+
+config: {}

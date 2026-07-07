@@ -67,6 +67,22 @@ jobs:
             echo "stamped $c: ${base} -> ${new}"
           done
           echo "release=true" >> "$GITHUB_OUTPUT"
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve Helm dependencies
+        if: steps.stamp.outputs.release == 'true'
+        run: |
+          set -euo pipefail
+          helm repo add fasttrack https://fasttrack-solutions.github.io/helm-charts
+          helm repo update
+          for c in ${{ steps.stamp.outputs.changed }}; do
+            f="charts/$c/Chart.yaml"
+            [ -f "$f" ] || continue
+            if yq '.dependencies // []' "$f" | grep -q 'name:'; then
+              echo "Resolving dependencies for $c..."
+              helm dependency update "charts/$c"
+            fi
+          done
 
       - name: Run chart-releaser
         if: steps.stamp.outputs.release == 'true'
