@@ -5,5 +5,4 @@ description: >-
   (Deployment, Service, HTTPRoute, KEDA ScaledObject, ServiceAccount/IRSA, CronJob,
   NetworkPolicy) so each service supplies only a thin values.yaml of placeholders.
   Consumed as a Helm *library* by per-service application charts via `{{ include }}`.
-type: library
 version: 1.0.0
