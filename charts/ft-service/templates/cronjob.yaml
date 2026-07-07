@@ -5,8 +5,8 @@ configMapRef / secretRef as the Deployment. Guarded by cronjob.enabled.
 NOTE: long-lived services that schedule work via an internal CRON_SCHEDULE env
 stay Deployments — this is only for true Kubernetes CronJobs.
 */}}
-{{- $cj := (index .Values "cronjob") | default dict -}}
-{{- if $cj.enabled -}}
+{{- $cronjob := (index .Values "cronjob") | default dict -}}
+{{- if $cronjob.enabled -}}
 {{- $name := include "ft-service.name" . -}}
 {{- $d := (index .Values "deployment") | default dict -}}
 {{- $img := $d.image | default dict -}}
@@ -22,15 +22,15 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
-  schedule: {{ required "cronjob.enabled=true requires cronjob.schedule" $cj.schedule | quote }}
-  suspend: {{ $cj.suspend | default false }}
-  concurrencyPolicy: {{ $cj.concurrencyPolicy | default "Forbid" }}
-  successfulJobsHistoryLimit: {{ $cj.successfulJobsHistoryLimit | default 3 }}
-  failedJobsHistoryLimit: {{ $cj.failedJobsHistoryLimit | default 3 }}
+  schedule: {{ required "cronjob.enabled=true requires cronjob.schedule" $cronjob.schedule | quote }}
+  suspend: {{ $cronjob.suspend | default false }}
+  concurrencyPolicy: {{ $cronjob.concurrencyPolicy | default "Forbid" }}
+  successfulJobsHistoryLimit: {{ $cronjob.successfulJobsHistoryLimit | default 3 }}
+  failedJobsHistoryLimit: {{ $cronjob.failedJobsHistoryLimit | default 3 }}
   jobTemplate:
     spec:
-      backoffLimit: {{ $cj.backoffLimit | default 0 }}
-      {{- with $cj.activeDeadlineSeconds }}
+      backoffLimit: {{ $cronjob.backoffLimit | default 0 }}
+      {{- with $cronjob.activeDeadlineSeconds }}
       activeDeadlineSeconds: {{ . }}
       {{- end }}
       template:
@@ -38,9 +38,9 @@ spec:
           labels:
             app: {{ $name }}
         spec:
-          restartPolicy: {{ $cj.restartPolicy | default "Never" }}
+          restartPolicy: {{ $cronjob.restartPolicy | default "Never" }}
           nodeSelector:
-            {{- toYaml ($cj.nodeSelector | default (dict "workload" "common_cronjobs")) | nindent 12 }}
+            {{- toYaml ($cronjob.nodeSelector | default (dict "workload" "common_cronjobs")) | nindent 12 }}
           {{- $sa := include "ft-service.serviceAccountName" . }}
           {{- if $sa }}
           serviceAccountName: {{ $sa }}
@@ -48,11 +48,11 @@ spec:
           containers:
             - name: {{ $name }}
               image: "{{ $repo }}{{ if $tag }}:{{ $tag }}{{ end }}"
-              {{- with $cj.command }}
+              {{- with $cronjob.command }}
               command:
                 {{- toYaml . | nindent 16 }}
               {{- end }}
-              {{- with $cj.args }}
+              {{- with $cronjob.args }}
               args:
                 {{- toYaml . | nindent 16 }}
               {{- end }}
