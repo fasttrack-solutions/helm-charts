@@ -119,6 +119,20 @@ entries:
     version: 0.1.0-9b9dbf9
   - apiVersion: v2
     appVersion: latest
+    created: "2026-07-07T08:39:50.346142689Z"
+    dependencies:
+    - name: ft-service
+      repository: https://fasttrack-solutions.github.io/helm-charts
+      version: '>=1.0.0-0'
+    description: CRM API Helm chart — thin wrapper over the ft-service library
+    digest: 8ec9c71eb4334975cadc20f76bd38a1fcbc300d936aac5c9118df440afc2b3ae
+    name: crm-api
+    type: application
+    urls:
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/crm-api-0.1.0-6bfbbfe/crm-api-0.1.0-6bfbbfe.tgz
+    version: 0.1.0-6bfbbfe
+  - apiVersion: v2
+    appVersion: latest
     created: "2026-07-07T07:58:15.821416345Z"
     dependencies:
     - name: ft-service
@@ -631,4 +645,4 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/serviceaccount-0.1.0/serviceaccount-0.1.0.tgz
     version: 0.1.0
-generated: "2026-07-07T08:39:32.692930802Z"
+generated: "2026-07-07T08:39:50.34627109Z"
