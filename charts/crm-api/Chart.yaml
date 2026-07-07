@@ -6,5 +6,5 @@ version: 0.1.0
 appVersion: "latest"
 dependencies:
   - name: ft-service
-    version: "1.x"
+    version: ">=1.0.0-0"
     repository: "https://fasttrack-solutions.github.io/helm-charts"
