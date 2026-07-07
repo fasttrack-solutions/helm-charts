@@ -568,6 +568,18 @@ entries:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/ft-service-1.0.0-a23ac9d/ft-service-1.0.0-a23ac9d.tgz
     version: 1.0.0-a23ac9d
   - apiVersion: v2
+    created: "2026-07-07T08:59:35.344386909Z"
+    description: Generic FastTrack service chart. Owns the shared Kubernetes workload
+      skeleton (Deployment, Service, HTTPRoute, KEDA ScaledObject, ServiceAccount/IRSA,
+      CronJob, NetworkPolicy). Deploy directly — inject service-specific values from
+      argo-deployments.
+    digest: a31c1e660e05e17bea083e55588c1fb89f851fe8eca60d13f1421806e93c4a7c
+    name: ft-service
+    type: application
+    urls:
+    - https://github.com/fasttrack-solutions/helm-charts/releases/download/ft-service-1.0.0-998121c/ft-service-1.0.0-998121c.tgz
+    version: 1.0.0-998121c
+  - apiVersion: v2
     created: "2026-07-07T08:50:46.904749881Z"
     description: Generic FastTrack service chart. Owns the shared Kubernetes workload
       skeleton (Deployment, Service, HTTPRoute, KEDA ScaledObject, ServiceAccount/IRSA,
@@ -681,4 +693,4 @@ entries:
     urls:
     - https://github.com/fasttrack-solutions/helm-charts/releases/download/serviceaccount-0.1.0/serviceaccount-0.1.0.tgz
     version: 0.1.0
-generated: "2026-07-07T08:50:46.904878302Z"
+generated: "2026-07-07T08:59:35.344466887Z"
