@@ -140,23 +140,33 @@ networkPolicy:
   egress: []
 
 # External Secrets Operator — pull secrets from Vault into a native K8s Secret.
+# You just give it a LIST OF SECRETS: each entry needs a secretKey (the key in
+# the resulting K8s Secret). The Vault path (remoteRef.key) is built ONCE from
+# <keyPrefix>/<clusterName>/<brandID>/<serviceName>, and property defaults to the
+# secretKey — so a typical service only lists its keys.
 externalSecret:
   enabled: false
-  refreshInterval: 1h
+  refreshInterval: 10m
   secretStoreRef:
     name: vault
     kind: SecretStore
   target:
-    name: ""         # default: release fullname
-    # template: {}   # ESO target template (engine: v2) for key transformation
+    name: ""            # default: service name
+    # template: {}      # ESO target template (engine: v2) for key transformation
+  # keyPrefix: clusters # first path segment; default "clusters"
+  # remoteKey: ""       # explicit full Vault path override (skips the auto-build)
   data: []
-  # - secretKey: rds-password
-  #   remoteKey: clusters/neospin/staging/crm-api
-  #   property: rds_password
+  # - secretKey: rds-password          # -> property defaults to "rds-password"
+  # - secretKey: api-key
+  #   property: API_KEY                # override the Vault field name
+  #   remoteKey: clusters/neospin/staging/other-svc   # override the path per-item
 
 # Last-resort escape hatch: arbitrary K8s objects rendered verbatim.
 extraManifests: []
 
 # Injected by the argo-deployments umbrella/env layer (chart -> global -> cluster -> env).
-# Read by httproute, IRSA arn, and the deployFlagKey gate. Never set per-service.
+# Read by httproute, IRSA arn, the deployFlagKey gate, and the externalSecret
+# Vault-path build (global.clusterName + global.brandID). Never set per-service.
+#   global.clusterName is derived in the ApplicationSet from the git path
+#   (`{{index .path.segments 2}}`) and passed in as this Helm value.
 global: {}
